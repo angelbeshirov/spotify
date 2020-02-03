@@ -12,7 +12,7 @@ import java.util.List;
  * @author angel.beshirov
  */
 public class IOWorker {
-    public static void writeUsersToFile(Path file, User... users) {
+    public static synchronized void writeUsersToFile(Path file, User... users) {
         try (var oos = new ObjectOutputStream(Files.newOutputStream(file))) {
             for (User user : users) {
                 oos.writeObject(user);
@@ -24,7 +24,7 @@ public class IOWorker {
     }
 
     // TODO make sure file is created;
-    public static List<User> readStudentsFromFile(Path file) {
+    public static synchronized List<User> readStudentsFromFile(Path file) {
         List<User> users = new ArrayList<>();
         try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
             while (true) {
@@ -44,7 +44,7 @@ public class IOWorker {
         return users;
     }
 
-    public static void writeToFile(Path file, String data) {
+    public static synchronized void writeToFile(Path file, String data) {
         try (var oos = new OutputStreamWriter(Files.newOutputStream(file))) {
             oos.write(data);
         } catch (IOException e) {

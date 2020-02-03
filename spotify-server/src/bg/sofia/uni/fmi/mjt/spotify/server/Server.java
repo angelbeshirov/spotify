@@ -15,7 +15,7 @@ public class Server {
 
     private static final int SERVER_PORT = 4444;
     private static final int MAX_THREADS = 10;
-    private final Map<User, ClientHandler> loggedUsers;
+    private final Map<User, ClientHandler> users;
     private final ExecutorService executorService;
 
     private volatile boolean isRunning;
@@ -24,7 +24,7 @@ public class Server {
      * Chat Server default initialization.
      */
     public Server() {
-        this.loggedUsers = new ConcurrentHashMap<>();
+        this.users = new ConcurrentHashMap<>();
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.isRunning = false;
     }
@@ -43,7 +43,8 @@ public class Server {
                 clientSocket = serverSocket.accept();
 
                 System.out.println("Accepted connection request from client " + clientSocket.getInetAddress());
-                final ClientHandler clientHandler = new ClientHandler(clientSocket, loggedUsers);
+                final ClientHandler clientHandler = new ClientHandler(clientSocket, users);
+
                 executorService.execute(clientHandler);
             }
         } catch (final IOException e) {

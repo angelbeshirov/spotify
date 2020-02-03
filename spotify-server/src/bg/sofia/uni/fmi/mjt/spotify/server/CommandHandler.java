@@ -26,12 +26,12 @@ public class CommandHandler {
                 if (args == null || args.length != 2) {
                     return Optional.of("Invalid arguments for login!");
                 }
-                return handleLogin(new User(args[0], args[1]));
+                return handleLogin(new User());
             case REGISTER:
                 if (args == null || args.length != 2) {
                     return Optional.of("Invalid arguments count for register!");
                 }
-                return handleRegister(new User(args[0], args[1]));
+                return handleRegister(user, args[0], args[1]);
             case DISCONNECT:
                 loggedInUsers.remove(user);
                 // TODO what if it is not yet logged?
@@ -42,12 +42,13 @@ public class CommandHandler {
         return Optional.empty();
     }
 
-    private Optional<String> handleRegister(User user) {
-        if (users.contains(user)) {
-            return Optional.of("User with this email already exists");
+    private Optional<String> handleRegister(User user, String email, String password) {
+        if (email == null || password == null) {
+            return Optional.of("Email or password is invalid!"); // TODO possibly improve this error handling
         }
 
-        users.add(user);
+        user.setEmail(email);
+        user.setPassword(password);
         IOWorker.writeUsersToFile(Path.of(USERS_FILE_NAME), user);
 
         return Optional.of("Registration was successful");

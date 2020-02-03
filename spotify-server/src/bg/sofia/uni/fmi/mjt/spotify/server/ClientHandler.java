@@ -17,18 +17,32 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private final CommandHandler commandHandler;
 
-    private Map<User, ClientHandler> clients;
+    private final Map<User, ClientHandler> clients;
+    private final User user;
+    private boolean isLoggedIn;
 
-    private volatile boolean isRunning = true;
+    private volatile boolean isRunning;
 
     public ClientHandler(final Socket socket, final Map<User, ClientHandler> clients) {
         this.socket = socket;
         this.clients = clients;
+        this.user = new User();
         this.commandHandler = new CommandHandler(clients);
+        this.isRunning = true;
+        this.isLoggedIn = false;
+        this.clients.put(user, this);
     }
 
     public Socket getSocket() {
         return socket;
+    }
+
+    public void logIn() {
+        this.isLoggedIn = true;
+    }
+
+    public boolean isLoggedIn() {
+        return isLoggedIn;
     }
 
     @Override
