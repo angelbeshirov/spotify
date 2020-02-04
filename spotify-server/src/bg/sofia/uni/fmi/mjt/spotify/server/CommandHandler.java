@@ -2,7 +2,10 @@ package bg.sofia.uni.fmi.mjt.spotify.server;
 
 import com.google.gson.Gson;
 
-import javax.sound.sampled.*;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,15 +24,17 @@ public class CommandHandler {
     private final List<User> registeredUsers;
     private final ClientHandler clientHandler;
     private final Gson gson;
+    private final List<Playlist> playlists;
 
     private MusicPlayer musicPlayer;
 
-    public CommandHandler(ClientHandler clientHandler, Map<User, ClientHandler> loggedInUsers, List<User> registeredUsers) {
+    public CommandHandler(ClientHandler clientHandler, Map<User, ClientHandler> loggedInUsers, List<User> registeredUsers, List<Playlist> playlists) {
         this.gson = new Gson(); // TODO may be from constructor? thread safe?
         this.clientHandler = clientHandler;
         this.loggedInUsers = loggedInUsers;
         this.registeredUsers = registeredUsers;
         this.musicPlayer = null; // TODO somehow improve with play method
+        this.playlists = playlists;
     }
 
     public Optional<Object> handleCommand(Command command, String... args) {
@@ -71,6 +76,44 @@ public class CommandHandler {
                     this.musicPlayer.stop();
                 }
             case TOP:
+            case CREATE_PLAYLIST:
+                if (args == null || args.length != 1) {
+                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
+                } else if (this.user == null) {
+                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can create playlists!")));
+                }
+
+                playlists.add(new Playlist(args[0], user.getEmail()));
+
+
+            case SHOW_PLAYLIST:
+                if (args == null || args.length != 1) {
+                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
+                } else if (this.user == null) {
+                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!")));
+                }
+
+                int index = playlists.indexOf(new Playlist(this.user.getEmail(), args[0]));
+                if (index == -1) {
+                    return Optional.of("You don't have playlist with name " + args[0]);
+                }
+
+                // TODO playlist should be uniquely identified by name + email
+                return Optional.of(playlists.get(index).toString());
+            case ADD_SONG_TO:
+                if (args == null || args.length != 2) {
+                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
+                } else if (this.user == null) {
+                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!")));
+                }
+
+                int index1 = playlists.indexOf(new Playlist(this.user.getEmail(), args[0]));
+                if (index1 == -1) {
+                    return Optional.of("You don't have playlist with name " + args[0]);
+                }
+
+                playlists.get(index1).addSong(new Song("asd", Path.of("asdasdasd"))); // TODO retrieve song here
+            case SEARCH:
         }
 
         return Optional.empty();
@@ -87,7 +130,7 @@ public class CommandHandler {
         }
 
         registeredUsers.add(user);
-        IOWorker.writeUsersToFile(Path.of(USERS_FILE_NAME), user);
+        IOWorker.writeToFile(Path.of(USERS_FILE_NAME), registeredUsers);
 
         return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Registration was successful")));
     }

@@ -3,8 +3,7 @@ package bg.sofia.uni.fmi.mjt.spotify.server;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * TODO synchronize
@@ -12,36 +11,46 @@ import java.util.List;
  * @author angel.beshirov
  */
 public class IOWorker {
-    public static synchronized void writeUsersToFile(Path file, User... users) {
+    public static synchronized void writeToFile(Path file, Collection<? extends Serializable> elemenets) {
+        if (elemenets == null || elemenets.size() == 0) {
+            return;
+        }
+
         try (var oos = new ObjectOutputStream(Files.newOutputStream(file))) {
-            for (User user : users) {
-                oos.writeObject(user);
-                oos.flush();
-            }
+            oos.writeObject(elemenets);
+            oos.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     // TODO make sure file is created;
-    public static synchronized List<User> readUsersFromFile(Path file) {
-        List<User> users = new ArrayList<>();
+    public static synchronized Set<User> readUsersFromFile(Path file) {
+        Set<User> users = new HashSet<>();
         try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
-            while (true) {
-                User user = (User) ois.readObject();
-                users.add(user);
-            }
+            users = (Set<User>) ois.readObject();
         } catch (EOFException e) {
-            // EMPTY BODY
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
+            // TODO ???
+            System.out.println("No registered users!");
+        } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
         return users;
+    }
+
+    public static synchronized Set<Playlist> readPlaylistsFromFile(Path file) {
+        Set<Playlist> playlists = new HashSet<>();
+        try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
+            playlists = (Set<Playlist>) ois.readObject();
+        } catch (EOFException e) {
+            // TODO ???
+            System.out.println("No playlists!");
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        return playlists;
     }
 
     public static synchronized void writeToFile(Path file, String data) {

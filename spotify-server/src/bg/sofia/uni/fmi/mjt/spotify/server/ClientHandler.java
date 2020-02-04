@@ -15,9 +15,9 @@ public class ClientHandler implements Runnable {
 
     private volatile boolean isRunning;
 
-    public ClientHandler(Socket socket, Map<User, ClientHandler> clients, List<User> registeredUsers) {
+    public ClientHandler(Socket socket, Map<User, ClientHandler> clients, Set<User> registeredUsers, Set<Playlist> playlists) {
         this.socket = socket;
-        this.commandHandler = new CommandHandler(this, clients, registeredUsers);
+        this.commandHandler = new CommandHandler(this, clients, registeredUsers, playlists);
         this.isRunning = true;
         this.isLoggedIn = false;
     }
