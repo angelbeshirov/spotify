@@ -2,7 +2,7 @@ package bg.sofia.uni.fmi.mjt.spotify.server;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Object representation of the system user. Two users are considered to be
@@ -14,15 +14,22 @@ import java.util.UUID;
 public class User implements Serializable {
 
     private static final long serialVersionUID = -4479739480268021769L;
-    private final UUID id;
+    private static final AtomicInteger GLOBAL_ID = new AtomicInteger(0);
+    private final int id;
     private String email;
     private String password;
 
 
     public User() {
-        this.id = UUID.randomUUID();
+        this.id = GLOBAL_ID.getAndAdd(1);
         this.email = null;
         this.password = null;
+    }
+
+    public User(String email, String password) {
+        this.id = GLOBAL_ID.getAndAdd(1);
+        this.email = email;
+        this.password = password;
     }
 
     public String getEmail() {
@@ -46,12 +53,12 @@ public class User implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id);
+        return Objects.equals(email, user.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(email);
     }
 
 }

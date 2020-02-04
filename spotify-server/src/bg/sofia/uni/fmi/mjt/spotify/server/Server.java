@@ -3,8 +3,11 @@ package bg.sofia.uni.fmi.mjt.spotify.server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,9 +17,10 @@ import java.util.concurrent.Executors;
 public class Server {
 
     private static final int SERVER_PORT = 4444;
-    private static final int MAX_THREADS = 10;
+    private static final int MAX_THREADS = 15;
     private final Map<User, ClientHandler> users;
     private final ExecutorService executorService;
+    private List<User> savedUsers;
 
     private volatile boolean isRunning;
 
@@ -25,6 +29,7 @@ public class Server {
      */
     public Server() {
         this.users = new ConcurrentHashMap<>();
+        this.savedUsers = new CopyOnWriteArrayList<>(IOWorker.readUsersFromFile(Path.of("src\\main\\resources\\users.bin")));
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.isRunning = false;
     }
@@ -43,7 +48,7 @@ public class Server {
                 clientSocket = serverSocket.accept();
 
                 System.out.println("Accepted connection request from client " + clientSocket.getInetAddress());
-                final ClientHandler clientHandler = new ClientHandler(clientSocket, users);
+                final ClientHandler clientHandler = new ClientHandler(clientSocket, users, savedUsers);
 
                 executorService.execute(clientHandler);
             }

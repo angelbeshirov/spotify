@@ -24,7 +24,7 @@ public class IOWorker {
     }
 
     // TODO make sure file is created;
-    public static synchronized List<User> readStudentsFromFile(Path file) {
+    public static synchronized List<User> readUsersFromFile(Path file) {
         List<User> users = new ArrayList<>();
         try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
             while (true) {

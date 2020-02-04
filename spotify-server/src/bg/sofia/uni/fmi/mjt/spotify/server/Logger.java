@@ -3,8 +3,8 @@ package bg.sofia.uni.fmi.mjt.spotify.server;
 import java.nio.file.Path;
 
 /**
- *
  * TODO think about synchronizing this cuz it will be used by multiple threads
+ *
  * @author angel.beshirov
  */
 public class Logger {
@@ -13,19 +13,21 @@ public class Logger {
     public static final String INFO = "[INFO] ";
     public static final String WARN = "[WARN] ";
 
-    public Logger() {
+    private final String name;
 
+    public Logger(String name) {
+        this.name = name;
     }
 
-    public void logError(String message) {
+    public static void logError(String message) {
         IOWorker.writeToFile(Path.of(LOG_PATH), ERROR + message);
     }
 
-    public void logWarning(String message) {
+    public static void logWarning(String message) {
         IOWorker.writeToFile(Path.of(LOG_PATH), WARN + message);
     }
 
-    public void logInfo(String message) {
+    public static void logInfo(String message) {
         IOWorker.writeToFile(Path.of(LOG_PATH), INFO + message);
     }
 }
