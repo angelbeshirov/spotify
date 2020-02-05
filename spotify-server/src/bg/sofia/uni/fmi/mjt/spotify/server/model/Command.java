@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server;
+package bg.sofia.uni.fmi.mjt.spotify.server.model;
 
 public enum Command {
     REGISTER,

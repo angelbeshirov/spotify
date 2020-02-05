@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server;
+package bg.sofia.uni.fmi.mjt.spotify.client.model;
 
 /**
  * @author angel.beshirov
@@ -7,9 +7,7 @@ public class Message {
     private MessageType messageType;
     private String value;
 
-    public Message(MessageType messageType, String value) {
-        this.messageType = messageType;
-        this.value = value;
+    public Message() {
     }
 
     public MessageType getMessageType() {

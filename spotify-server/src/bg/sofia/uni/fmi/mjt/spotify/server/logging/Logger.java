@@ -1,4 +1,6 @@
-package bg.sofia.uni.fmi.mjt.spotify.server;
+package bg.sofia.uni.fmi.mjt.spotify.server.logging;
+
+import bg.sofia.uni.fmi.mjt.spotify.server.io.IOWorker;
 
 import java.nio.file.Path;
 
@@ -8,7 +10,7 @@ import java.nio.file.Path;
  * @author angel.beshirov
  */
 public class Logger {
-    private final static String LOG_PATH = "spotify.log";
+    private final static String LOG_PATH = "src\\main\\resources\\spotify.log";
     public static final String ERROR = "[ERROR] ";
     public static final String INFO = "[INFO] ";
     public static final String WARN = "[WARN] ";

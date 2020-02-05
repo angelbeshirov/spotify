@@ -1,5 +1,9 @@
 package bg.sofia.uni.fmi.mjt.spotify.server;
 
+import bg.sofia.uni.fmi.mjt.spotify.server.io.IOWorker;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.model.*;
+import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
 import com.google.gson.Gson;
 
 import javax.sound.sampled.AudioFormat;
@@ -9,117 +13,80 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author angel.beshirov
- * TODO in properties
+ * TODO in properties the directory path
  */
 public class CommandHandler {
+    private static final Gson gson = new Gson();
     private static final String USERS_FILE_NAME = "src\\main\\resources\\users.bin";
-    private User user;
+    private static final String PLAYLISTS_FILE_NAME = "src\\main\\resources\\playlists.bin";
+    private static final int MUSIC_PLAY_DELAY = 1;
+    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1); // TODO this should come in the constructor maybe
+
     private Map<User, ClientHandler> loggedInUsers;
-    private final List<User> registeredUsers;
     private final ClientHandler clientHandler;
-    private final Gson gson;
+    private User user;
+    private final List<User> registeredUsers;
     private final List<Playlist> playlists;
+    private final List<Song> songs;
 
     private MusicPlayer musicPlayer;
 
-    public CommandHandler(ClientHandler clientHandler, Map<User, ClientHandler> loggedInUsers, List<User> registeredUsers, List<Playlist> playlists) {
-        this.gson = new Gson(); // TODO may be from constructor? thread safe?
+    public CommandHandler(ClientHandler clientHandler, Map<User, ClientHandler> loggedInUsers, List<User> registeredUsers, List<Playlist> playlists, List<Song> songs) {
         this.clientHandler = clientHandler;
         this.loggedInUsers = loggedInUsers;
         this.registeredUsers = registeredUsers;
-        this.musicPlayer = null; // TODO somehow improve with play method
         this.playlists = playlists;
+        this.songs = songs;
+        this.musicPlayer = null; // TODO somehow improve with play method
     }
 
-    public Optional<Object> handleCommand(Command command, String... args) {
+    public Optional<String> handleCommand(Command command, String... args) {
         switch (command) {
             // TODO return vs break is switch statement
             case LOGIN:
-                if (args == null || args.length != 2) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for login!")));
-                } else if (this.user != null) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You are already logged in!")));
-                }
-
-                return handleLogin(args[0], args[1]);
+                return handleLogin(args);
             case REGISTER:
-                if (args == null || args.length != 2) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments count for register!")));
-                } else if (this.user != null) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You are already logged in!")));
-                }
-
-                return handleRegister(args[0], args[1]);
+                return handleRegister(args);
             case DISCONNECT:
-                if (user != null) {
-                    loggedInUsers.remove(user);
-                }
-
-                return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Successfully disconnected!")));
+                return handleDisconnect();
             case PLAY:
-                if (args == null || args.length != 1) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for song playing!")));
-                } else if (this.user == null) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to first log in before you can listen to songs!")));
-                }
-
-                return handleSongPlaying(args[0]);
-
+                return handleSongPlaying(args);
             case STOP:
-                if (this.musicPlayer != null) {
-                    this.musicPlayer.stop();
-                }
+                return handleStopPlaying();
             case TOP:
             case CREATE_PLAYLIST:
-                if (args == null || args.length != 1) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
-                } else if (this.user == null) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can create playlists!")));
-                }
-
-                playlists.add(new Playlist(args[0], user.getEmail()));
-
-
+                return handleCreatePlaylist(args);
             case SHOW_PLAYLIST:
-                if (args == null || args.length != 1) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
-                } else if (this.user == null) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!")));
-                }
-
-                int index = playlists.indexOf(new Playlist(this.user.getEmail(), args[0]));
-                if (index == -1) {
-                    return Optional.of("You don't have playlist with name " + args[0]);
-                }
-
-                // TODO playlist should be uniquely identified by name + email
-                return Optional.of(playlists.get(index).toString());
+                return handleShowPlaylist(args);
             case ADD_SONG_TO:
-                if (args == null || args.length != 2) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
-                } else if (this.user == null) {
-                    return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!")));
-                }
-
-                int index1 = playlists.indexOf(new Playlist(this.user.getEmail(), args[0]));
-                if (index1 == -1) {
-                    return Optional.of("You don't have playlist with name " + args[0]);
-                }
-
-                playlists.get(index1).addSong(new Song("asd", Path.of("asdasdasd"))); // TODO retrieve song here
+                return handleAddSongTo(args);
             case SEARCH:
+                return handleSearch(args);
         }
 
         return Optional.empty();
     }
 
-    private Optional<Object> handleRegister(String email, String password) {
+    private Optional<String> handleRegister(String... args) {
+        if (args == null || args.length != 2) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments count for register!")));
+        } else if (this.user != null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You are already logged in!")));
+        }
+
+        String email = args[0];
+        String password = args[1];
+
         if (email == null || password == null) {
             return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Email or password is invalid!"))); // TODO possibly improve this error handling
         }
@@ -135,8 +102,14 @@ public class CommandHandler {
         return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Registration was successful")));
     }
 
-    private Optional<Object> handleLogin(String email, String password) {
-        User user = new User(email, password);
+    private Optional<String> handleLogin(String... args) {
+        if (args == null || args.length != 2) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for login!")));
+        } else if (this.user != null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You are already logged in!")));
+        }
+
+        User user = new User(args[0], args[1]);
         int index = registeredUsers.indexOf(user);
 
         if (index == -1) {
@@ -155,7 +128,23 @@ public class CommandHandler {
         return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Successfully logged in!")));
     }
 
-    private Optional<Object> handleSongPlaying(String songName) {
+    private Optional<String> handleDisconnect() {
+        if (user != null) {
+            loggedInUsers.remove(user);
+        }
+
+        return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Successfully disconnected!")));
+    }
+
+    private Optional<String> handleSongPlaying(String... args) {
+        if (args == null || args.length != 1) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for song playing!")));
+        } else if (this.user == null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to first log in before you can listen to songs!")));
+        }
+
+        String songName = args[0];
+
         File song = new File("src\\main\\resources\\" + songName);
         SongInfo songInfo;
         AudioFormat format;
@@ -171,10 +160,10 @@ public class CommandHandler {
             songInfo.setSampleSizeInBits(format.getSampleSizeInBits());
 
             this.musicPlayer = new MusicPlayer(song, this.clientHandler.getSocket().getOutputStream());
-            new Thread(this.musicPlayer).start();
+            executor.schedule(this.musicPlayer, MUSIC_PLAY_DELAY, TimeUnit.SECONDS);
         } catch (IOException e) {
             Logger.logError("IOException. " + e.getMessage());
-            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "IOException")));
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Internal server error!")));
         } catch (UnsupportedAudioFileException e) {
             Logger.logError("Unsupported format exception. " + e.getMessage());
             return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Unsupported format!")));
@@ -182,5 +171,85 @@ public class CommandHandler {
         String value = gson.toJson(songInfo, SongInfo.class);
 
         return Optional.of(gson.toJson(new Message(MessageType.JSON, value)));
+    }
+
+    private Optional<String> handleStopPlaying() {
+        if (this.musicPlayer != null) {
+            this.musicPlayer.stop();
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<String> handleCreatePlaylist(String... args) {
+        if (args == null || args.length != 1) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
+        } else if (this.user == null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can create playlists!")));
+        }
+
+        playlists.add(new Playlist(args[0], user.getEmail())); // TODO multiple arguments can be concatenated
+
+        IOWorker.writeToFile(Path.of(PLAYLISTS_FILE_NAME), playlists);
+        return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Playlist was created successfully!")));
+    }
+
+    private Optional<String> handleShowPlaylist(String... args) {
+        if (args == null || args.length != 1) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!")));
+        } else if (this.user == null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!")));
+        }
+
+        int index = playlists.indexOf(new Playlist(args[0], this.user.getEmail()));
+        if (index == -1) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You don't have playlist with name " + args[0])));
+        }
+
+        // TODO playlist should be uniquely identified by name + email
+        return Optional.of(gson.toJson(new Message(MessageType.TEXT, playlists.get(index).toString())));
+    }
+
+    private Optional<String> handleAddSongTo(String... args) {
+        if (args == null || args.length != 2) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments for adding song to playlist!")));
+        } else if (this.user == null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!")));
+        }
+
+        int index1 = playlists.indexOf(new Playlist(args[0], this.user.getEmail()));
+        if (index1 == -1) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "You don't have playlist with name " + args[0])));
+        }
+
+        Playlist playlist = playlists.get(index1);
+
+        boolean k = false;
+        for (Song song : songs) {
+            if (song.getSongName().equals(args[1])) {
+                playlist.addSong(song); // TODO what if it already exists in the playlist
+                k = true;
+            }
+        }
+
+        return Optional.of(gson.toJson(new Message(MessageType.TEXT, k ? "Song was added successfully" : "There is not a song with that name!")));
+    }
+
+    private Optional<String> handleSearch(String... args) {
+        if (args == null || args.length == 0) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "Invalid arguments. Command has the following syntax 'search <words>'")));
+        }
+
+        StringBuilder sb = new StringBuilder("Found songs: ");
+        List<Song> foundSongs = new ArrayList<>();
+        for (String keyword : args) {
+            foundSongs.addAll(songs.stream().filter(x -> x.getSongName().toLowerCase().contains(keyword)).collect(Collectors.toList()));
+        }
+
+        for (Song song : foundSongs) {
+            sb.append(song.getSongName()).append(" ");
+        }
+
+        return Optional.of(gson.toJson(new Message(MessageType.TEXT, sb.toString())));
     }
 }

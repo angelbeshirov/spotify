@@ -1,9 +1,12 @@
-package bg.sofia.uni.fmi.mjt.spotify.server;
+package bg.sofia.uni.fmi.mjt.spotify.client.model;
+
+import java.io.Serializable;
 
 /**
  * @author angel.beshirov
  */
-public class SongInfo {
+public class SongInfo implements Serializable {
+    private static final long serialVersionUID = 867518632342411123L;
     private String encoding;
     private float sampleRate;
     private int sampleSizeInBits;

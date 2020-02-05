@@ -1,4 +1,9 @@
-package bg.sofia.uni.fmi.mjt.spotify.server;
+package bg.sofia.uni.fmi.mjt.spotify.server.io;
+
+import bg.sofia.uni.fmi.mjt.spotify.server.ClientHandler;
+import bg.sofia.uni.fmi.mjt.spotify.server.model.Playlist;
+import bg.sofia.uni.fmi.mjt.spotify.server.model.Song;
+import bg.sofia.uni.fmi.mjt.spotify.server.model.User;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,8 +24,9 @@ public class Server {
     private static final int MAX_THREADS = 15;
     private final Map<User, ClientHandler> users;
     private final ExecutorService executorService;
-    private Set<User> savedUsers;
-    private Set<Playlist> playlists;
+    // TODO if later not need to be list change to set;
+    private List<User> savedUsers;
+    private List<Playlist> playlists;
     private List<Song> songs;
 
     private volatile boolean isRunning;
@@ -31,10 +37,11 @@ public class Server {
     public Server() {
         this.users = new ConcurrentHashMap<>();
         // TODO check if this file exists otherwise it fails;
-        this.savedUsers = Collections.synchronizedSet(new HashSet<>(IOWorker.readUsersFromFile(Path.of("src\\main\\resources\\users.bin"))));
-        this.playlists = Collections.synchronizedSet(new HashSet<>(IOWorker.readPlaylistsFromFile(Path.of("src\\main\\resources\\playlists.bin"))));
+        this.savedUsers = Collections.synchronizedList(new ArrayList<>(IOWorker.deserializeUsers(Path.of("src\\main\\resources\\users.bin"))));
+        this.playlists = Collections.synchronizedList(new ArrayList<>(IOWorker.deserializePlaylists(Path.of("src\\main\\resources\\playlists.bin"))));
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.isRunning = false;
+        this.songs = Collections.synchronizedList(new ArrayList<>());
         retrieveSongs("src\\main\\resources\\songs");
     }
 
@@ -52,7 +59,7 @@ public class Server {
                 clientSocket = serverSocket.accept();
 
                 System.out.println("Accepted connection request from client " + clientSocket.getInetAddress());
-                final ClientHandler clientHandler = new ClientHandler(clientSocket, users, savedUsers, playlists);
+                final ClientHandler clientHandler = new ClientHandler(clientSocket, users, savedUsers, playlists, songs);
 
                 executorService.execute(clientHandler);
             }
@@ -63,7 +70,7 @@ public class Server {
 
     private void retrieveSongs(String directory) {
         File file = new File(directory);
-        if (!file.isDirectory()) {
+        if (file.isDirectory()) {
             iterateSongs(file.listFiles());
         }
     }

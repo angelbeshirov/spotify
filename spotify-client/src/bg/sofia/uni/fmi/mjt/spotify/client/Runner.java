@@ -1,5 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.client;
 
+import bg.sofia.uni.fmi.mjt.spotify.client.io.Client;
+
 /**
  * @author angel.beshirov
  */

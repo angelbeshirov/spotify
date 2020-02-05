@@ -1,4 +1,7 @@
-package bg.sofia.uni.fmi.mjt.spotify.server;
+package bg.sofia.uni.fmi.mjt.spotify.server.io;
+
+import bg.sofia.uni.fmi.mjt.spotify.server.model.Playlist;
+import bg.sofia.uni.fmi.mjt.spotify.server.model.User;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -6,7 +9,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * TODO synchronize
+ * TODO improve
  *
  * @author angel.beshirov
  */
@@ -25,12 +28,11 @@ public class IOWorker {
     }
 
     // TODO make sure file is created;
-    public static synchronized Set<User> readUsersFromFile(Path file) {
-        Set<User> users = new HashSet<>();
+    public static synchronized List<User> deserializeUsers(Path file) {
+        List<User> users = new ArrayList<>();
         try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
-            users = (Set<User>) ois.readObject();
+            users = (List<User>) ois.readObject();
         } catch (EOFException e) {
-            // TODO ???
             System.out.println("No registered users!");
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -39,10 +41,10 @@ public class IOWorker {
         return users;
     }
 
-    public static synchronized Set<Playlist> readPlaylistsFromFile(Path file) {
-        Set<Playlist> playlists = new HashSet<>();
+    public static synchronized List<Playlist> deserializePlaylists(Path file) {
+        List<Playlist> playlists = new ArrayList<>();
         try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
-            playlists = (Set<Playlist>) ois.readObject();
+            playlists = (List<Playlist>) ois.readObject();
         } catch (EOFException e) {
             // TODO ???
             System.out.println("No playlists!");

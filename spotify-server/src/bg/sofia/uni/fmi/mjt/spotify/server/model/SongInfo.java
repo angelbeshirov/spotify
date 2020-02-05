@@ -1,12 +1,9 @@
-package bg.sofia.uni.fmi.mjt.spotify.client;
-
-import java.io.Serializable;
+package bg.sofia.uni.fmi.mjt.spotify.server.model;
 
 /**
  * @author angel.beshirov
  */
-public class SongInfo implements Serializable {
-    private static final long serialVersionUID = 867518632342411123L;
+public class SongInfo {
     private String encoding;
     private float sampleRate;
     private int sampleSizeInBits;
@@ -69,18 +66,5 @@ public class SongInfo implements Serializable {
 
     public void setBigEndian(boolean bigEndian) {
         this.bigEndian = bigEndian;
-    }
-
-    @Override
-    public String toString() {
-        return "SongInfo{" +
-                "encoding='" + encoding + '\'' +
-                ", sampleRate=" + sampleRate +
-                ", sampleSizeInBits=" + sampleSizeInBits +
-                ", channels=" + channels +
-                ", frameSize=" + frameSize +
-                ", frameRate=" + frameRate +
-                ", bigEndian=" + bigEndian +
-                '}';
     }
 }
