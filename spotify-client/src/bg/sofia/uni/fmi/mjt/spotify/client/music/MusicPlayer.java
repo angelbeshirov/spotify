@@ -6,6 +6,7 @@ import javax.sound.sampled.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * TODO listener or something
@@ -63,22 +64,26 @@ public class MusicPlayer {
                 // this starts a new thread
                 sourceDataLine.start();
 
+                boolean endOfSong = false;
                 final byte[] buffer = new byte[2048];
                 int k;
                 while ((k = inputStream.read(buffer)) != -1 && isPlaying) {
+                    if (Objects.deepEquals(Arrays.copyOf(buffer, k), STOP.getBytes())) {
+                        endOfSong = true;
+                        break;
+                    }
                     sourceDataLine.write(buffer, 0, k);
                 }
 
-                while ((k = inputStream.read(buffer)) != -1) {
-                    if (k != 2048) {
-                        String s = new String(Arrays.copyOfRange(buffer, 0, k));
-                        System.out.println(s);
-                        if (s.equalsIgnoreCase(STOP)) {
-                            break;
-                        }
+                while ((k = inputStream.read(buffer)) != -1 && !endOfSong) {
+                    if (Objects.deepEquals(Arrays.copyOf(buffer, k), STOP.getBytes())) {
+                        break;
                     }
                 }
 
+                System.out.println("Stopping player!");
+
+                // TODO client shouldnt be able to send any command except stop to the server while playing song
                 sourceDataLine.stop();
             } catch (LineUnavailableException | IOException e) {
                 System.out.println("Error while playing music!" + e.getMessage());

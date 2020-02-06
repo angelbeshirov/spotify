@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,6 +43,7 @@ public class Server {
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.isRunning = false;
         this.songs = Collections.synchronizedList(new ArrayList<>());
+//        this.currentlyPlaying = new ConcurrentSkipListMap<>()
         retrieveSongs("src\\main\\resources\\songs");
     }
 

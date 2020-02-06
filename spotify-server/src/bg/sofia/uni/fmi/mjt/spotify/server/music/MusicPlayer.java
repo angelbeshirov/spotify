@@ -1,6 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.music;
 
 import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.model.Song;
 
 import java.io.*;
 
@@ -10,12 +11,12 @@ import java.io.*;
 public class MusicPlayer implements Runnable {
     public static final int BUFFER_SIZE = 2048;
     public static final String STOP = "STOP";
-    private final File song;
+    private final Song song;
     private final OutputStream outputStream;
 
     private volatile boolean shouldPlay;
 
-    public MusicPlayer(File song, OutputStream outputStream) {
+    public MusicPlayer(Song song, OutputStream outputStream) {
         this.song = song;
         this.shouldPlay = true;
         this.outputStream = outputStream;
@@ -23,13 +24,14 @@ public class MusicPlayer implements Runnable {
 
     @Override
     public void run() {
-        try (InputStream inputStream = new FileInputStream(song)) {
-            int k;
+        try (FileInputStream inputStream = new FileInputStream(song.getPath().toFile())) {
+
             byte[] buff = new byte[BUFFER_SIZE];
-            while ((k = inputStream.read(buff)) != -1 && shouldPlay) {
+            while (inputStream.available() != 0 && shouldPlay) {
+                int k = inputStream.read(buff);
                 outputStream.write(buff, 0, k);
             }
-
+            outputStream.flush();
             outputStream.write(STOP.getBytes());
             outputStream.flush();
         } catch (IOException e) {

@@ -10,7 +10,6 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -144,11 +143,21 @@ public class CommandHandler {
         }
 
         String songName = args[0];
+        Song songToPlay = null;
+        for (Song song : this.songs) {
+            if (song.getSongName().equalsIgnoreCase(songName)) {
+                songToPlay = song;
+            }
+        }
 
-        File song = new File("src\\main\\resources\\" + songName);
+        if (songToPlay == null) {
+            return Optional.of(gson.toJson(new Message(MessageType.TEXT, "There is no song with this name!")));
+        }
+
+
         SongInfo songInfo;
         AudioFormat format;
-        try (AudioInputStream stream = AudioSystem.getAudioInputStream(song)) {
+        try (AudioInputStream stream = AudioSystem.getAudioInputStream(songToPlay.getPath().toFile())) {
             format = stream.getFormat();
             songInfo = new SongInfo();
             songInfo.setBigEndian(format.isBigEndian());
@@ -159,7 +168,7 @@ public class CommandHandler {
             songInfo.setSampleRate(format.getSampleRate());
             songInfo.setSampleSizeInBits(format.getSampleSizeInBits());
 
-            this.musicPlayer = new MusicPlayer(song, this.clientHandler.getSocket().getOutputStream());
+            this.musicPlayer = new MusicPlayer(songToPlay, this.clientHandler.getSocket().getOutputStream());
             executor.schedule(this.musicPlayer, MUSIC_PLAY_DELAY, TimeUnit.SECONDS);
         } catch (IOException e) {
             Logger.logError("IOException. " + e.getMessage());
@@ -247,7 +256,7 @@ public class CommandHandler {
         }
 
         for (Song song : foundSongs) {
-            sb.append(song.getSongName()).append(" ");
+            sb.append(song.getSongName()).append(",");
         }
 
         return Optional.of(gson.toJson(new Message(MessageType.TEXT, sb.toString())));
