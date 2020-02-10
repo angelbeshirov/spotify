@@ -4,6 +4,7 @@ import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.client.model.SongInfo;
 
 import javax.sound.sampled.*;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -28,6 +29,8 @@ public class MusicPlayer {
 
         musicPlayerThread.start();
         musicPlayerThread.join();
+
+        System.out.println("Music player exited successfully!");
     }
 
     public void stop() {
@@ -39,13 +42,13 @@ public class MusicPlayer {
         private static final int BUFFER_SIZE = 2048;
 
         private final SongInfo songInfo;
-        private final InputStream inputStream;
+        private final DataInputStream inputStream;
 
         private volatile boolean isPlaying;
 
         private Player(SongInfo songInfo, InputStream inputStream) {
             this.songInfo = songInfo;
-            this.inputStream = inputStream;
+            this.inputStream = new DataInputStream(inputStream);
             this.isPlaying = true;
         }
 
@@ -66,31 +69,61 @@ public class MusicPlayer {
                 // this starts a new thread
                 sourceDataLine.start();
 
-                byte[] s = STOP.getBytes();
                 boolean endOfSong = false;
                 final byte[] buffer = new byte[BUFFER_SIZE];
-                int k;
-                while ((k = inputStream.read(buffer)) != -1 && isPlaying) {
-                    //System.out.println(k);
-                    if (Objects.deepEquals(Arrays.copyOf(buffer, k), STOP.getBytes())) {
-                        //System.out.println("here");
+
+                while (isPlaying) {
+                    int size = inputStream.readInt();
+                    boolean end = false;
+                    int allBytes = 0;
+                    int bytesRead;
+
+                    while (!end) {
+                        bytesRead = inputStream.read(buffer, 0, size);
+
+                        allBytes += bytesRead;
+                        if (allBytes >= size) {
+                            //System.out.println("Out for " + allBytes);
+                            end = true;
+                        }
+                    }
+
+                    if (Objects.deepEquals(Arrays.copyOf(buffer, allBytes), STOP.getBytes())) {
                         endOfSong = true;
                         break;
                     }
-                    sourceDataLine.write(buffer, 0, k);
-                }
 
-                while (!endOfSong && (k = inputStream.read(buffer)) != -1) {
-                    if (Objects.deepEquals(Arrays.copyOf(buffer, k), STOP.getBytes())) {
-                        break;
+                    sourceDataLine.write(buffer, 0, allBytes);
+                }
+                int k;
+
+                System.out.println("End while 1!");
+
+                while (!endOfSong) {
+                    int size = inputStream.readInt();
+                    System.out.println("Size is" + size);
+                    boolean end = false;
+                    int bytesRead = 0;
+                    int allBytes = 0;
+                    while (!end) {
+                        bytesRead = inputStream.read(buffer);
+
+                        allBytes += bytesRead;
+                        if (allBytes >= size) {
+                            end = true;
+                        }
+                    }
+
+                    if (Objects.deepEquals(Arrays.copyOf(buffer, allBytes), STOP.getBytes())) {
+                        endOfSong = true;
                     }
                 }
-
-                System.out.println("Stopping player!");
 
                 // TODO client shouldn't be able to send any command except stop to the server while playing song
                 sourceDataLine.drain();
                 sourceDataLine.stop();
+
+                System.out.println("Stopping player!");
             } catch (LineUnavailableException | IOException e) {
                 System.out.println("Error while playing music!" + e.getMessage());
                 Logger.logError(e.toString());

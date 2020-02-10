@@ -33,13 +33,16 @@ public class MusicPlayer implements Runnable {
         System.out.println(song.getPath().toFile().length());
         try (FileInputStream fileInputStream = new FileInputStream(song.getPath().toFile())) {
 
+            DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+
             byte[] buff = new byte[BUFFER_SIZE];
-            while (fileInputStream.available() != 0 && shouldPlay) {
-                int k = fileInputStream.read(buff);
+            int k;
+            while (( k = fileInputStream.read(buff)) > 0 && shouldPlay) {
                 int mod = k % frameSize;
+                dataOutputStream.writeInt(k - mod);
                 outputStream.write(buff, 0, k - mod);
             }
-            outputStream.flush();
+            dataOutputStream.writeInt(STOP.getBytes().length);
             outputStream.write(STOP.getBytes(), 0, STOP.getBytes().length);
             outputStream.flush();
             System.out.println("Finishing song playing!");

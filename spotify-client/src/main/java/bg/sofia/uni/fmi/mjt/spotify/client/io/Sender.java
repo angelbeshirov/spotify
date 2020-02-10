@@ -53,7 +53,7 @@ public class Sender implements Runnable {
                         receiver.stop();
                         this.isRunning = false;
                     } else if (command.toLowerCase().startsWith("play")) {
-                        isPlaying = true;
+//                        isPlaying = true;
                     }
                 }
             }
