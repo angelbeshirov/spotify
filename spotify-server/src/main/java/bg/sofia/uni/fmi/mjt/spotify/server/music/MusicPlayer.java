@@ -40,11 +40,10 @@ public class MusicPlayer implements Runnable {
                 outputStream.write(buff, 0, k - mod);
             }
             outputStream.flush();
-            Thread.sleep(1000);
             outputStream.write(STOP.getBytes(), 0, STOP.getBytes().length);
             outputStream.flush();
             System.out.println("Finishing song playing!");
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             Logger.logError("Error while playing song to client!");
         }
     }

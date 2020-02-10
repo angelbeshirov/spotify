@@ -13,7 +13,8 @@ import java.util.*;
  *
  * @author angel.beshirov
  */
-public class IOWorker {
+public class IOUtil {
+
     public static synchronized void writeToFile(Path file, Collection<? extends Serializable> elemenets) {
         if (elemenets == null || elemenets.size() == 0) {
             return;
@@ -22,6 +23,14 @@ public class IOWorker {
         try (var oos = new ObjectOutputStream(Files.newOutputStream(file))) {
             oos.writeObject(elemenets);
             oos.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static synchronized void writeToFile(Path file, String data) {
+        try (var oos = new OutputStreamWriter(Files.newOutputStream(file))) {
+            oos.write(data);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,13 +62,5 @@ public class IOWorker {
         }
 
         return playlists;
-    }
-
-    public static synchronized void writeToFile(Path file, String data) {
-        try (var oos = new OutputStreamWriter(Files.newOutputStream(file))) {
-            oos.write(data);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

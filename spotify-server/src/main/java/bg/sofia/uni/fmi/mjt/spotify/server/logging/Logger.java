@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.logging;
 
-import bg.sofia.uni.fmi.mjt.spotify.server.io.IOWorker;
+import bg.sofia.uni.fmi.mjt.spotify.server.io.IOUtil;
 
 import java.nio.file.Path;
 
@@ -22,14 +22,14 @@ public class Logger {
     }
 
     public static void logError(String message) {
-        IOWorker.writeToFile(Path.of(LOG_PATH), ERROR + message);
+        IOUtil.writeToFile(Path.of(LOG_PATH), ERROR + message);
     }
 
     public static void logWarning(String message) {
-        IOWorker.writeToFile(Path.of(LOG_PATH), WARN + message);
+        IOUtil.writeToFile(Path.of(LOG_PATH), WARN + message);
     }
 
     public static void logInfo(String message) {
-        IOWorker.writeToFile(Path.of(LOG_PATH), INFO + message);
+        IOUtil.writeToFile(Path.of(LOG_PATH), INFO + message);
     }
 }

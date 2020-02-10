@@ -71,9 +71,9 @@ public class MusicPlayer {
                 final byte[] buffer = new byte[BUFFER_SIZE];
                 int k;
                 while ((k = inputStream.read(buffer)) != -1 && isPlaying) {
-                    System.out.println(k);
+                    //System.out.println(k);
                     if (Objects.deepEquals(Arrays.copyOf(buffer, k), STOP.getBytes())) {
-                        System.out.println("here");
+                        //System.out.println("here");
                         endOfSong = true;
                         break;
                     }

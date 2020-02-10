@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.client;
 
-import bg.sofia.uni.fmi.mjt.spotify.server.io.IOWorker;
+import bg.sofia.uni.fmi.mjt.spotify.server.io.IOUtil;
 import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.server.model.*;
 import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
@@ -95,7 +95,7 @@ public class CommandHandler {
         }
 
         registeredUsers.add(user);
-        IOWorker.writeToFile(Path.of(USERS_FILE_NAME), registeredUsers);
+        IOUtil.writeToFile(Path.of(USERS_FILE_NAME), registeredUsers);
 
         return Optional.of(GSON.toJson(new Message(MessageType.TEXT, "Registration was successful")));
     }
@@ -228,7 +228,7 @@ public class CommandHandler {
 
         playlists.add(new Playlist(args[0], user.getEmail())); // TODO multiple arguments can be concatenated
 
-        IOWorker.writeToFile(Path.of(PLAYLISTS_FILE_NAME), playlists);
+        IOUtil.writeToFile(Path.of(PLAYLISTS_FILE_NAME), playlists);
         return Optional.of(GSON.toJson(new Message(MessageType.TEXT, "Playlist was created successfully!")));
     }
 

@@ -39,8 +39,8 @@ public class Server {
     public Server() {
         this.users = new ConcurrentHashMap<>();
         // TODO check if this file exists otherwise it fails;
-        this.savedUsers = Collections.synchronizedList(new ArrayList<>(IOWorker.deserializeUsers(Path.of("src\\main\\resources\\users.bin"))));
-        this.playlists = Collections.synchronizedList(new ArrayList<>(IOWorker.deserializePlaylists(Path.of("src\\main\\resources\\playlists.bin"))));
+        this.savedUsers = Collections.synchronizedList(new ArrayList<>(IOUtil.deserializeUsers(Path.of("src\\main\\resources\\users.bin"))));
+        this.playlists = Collections.synchronizedList(new ArrayList<>(IOUtil.deserializePlaylists(Path.of("src\\main\\resources\\playlists.bin"))));
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.isRunning = false;
         this.songs = Collections.synchronizedList(new ArrayList<>());
