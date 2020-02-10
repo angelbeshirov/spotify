@@ -1,12 +1,11 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.music;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
-import bg.sofia.uni.fmi.mjt.spotify.client.model.SongInfo;
+import bg.sofia.uni.fmi.mjt.spotify.model.Message;
+import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
 
 import javax.sound.sampled.*;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -16,15 +15,15 @@ import java.util.Objects;
  * @author angel.beshirov
  */
 public class MusicPlayer {
-    private final InputStream inputStream;
+    private final ObjectInputStream objectInputStream;
     private Player player;
 
-    public MusicPlayer(InputStream inputStream) {
-        this.inputStream = inputStream;
+    public MusicPlayer(ObjectInputStream objectInputStream) {
+        this.objectInputStream = objectInputStream;
     }
 
     public void start(SongInfo songInfo) throws InterruptedException {
-        this.player = new Player(songInfo, inputStream);
+        this.player = new Player(songInfo, objectInputStream);
         Thread musicPlayerThread = new Thread(this.player);
 
         musicPlayerThread.start();
@@ -42,13 +41,13 @@ public class MusicPlayer {
         private static final int BUFFER_SIZE = 2048;
 
         private final SongInfo songInfo;
-        private final DataInputStream inputStream;
+        private ObjectInputStream objectInputStream;
 
         private volatile boolean isPlaying;
 
-        private Player(SongInfo songInfo, InputStream inputStream) {
+        private Player(SongInfo songInfo, ObjectInputStream objectInputStream) {
             this.songInfo = songInfo;
-            this.inputStream = new DataInputStream(inputStream);
+            this.objectInputStream = objectInputStream;
             this.isPlaying = true;
         }
 
@@ -73,60 +72,60 @@ public class MusicPlayer {
                 final byte[] buffer = new byte[BUFFER_SIZE];
 
                 while (isPlaying) {
-                    int size = inputStream.readInt();
+                    Message message = (Message) objectInputStream.readObject();
                     boolean end = false;
                     int allBytes = 0;
                     int bytesRead;
 
-                    while (!end) {
-                        bytesRead = inputStream.read(buffer, 0, size);
+//                    while (!end) {
+//                        bytesRead = inputStream.read(buffer, 0, size);
+//
+//                        allBytes += bytesRead;
+//                        if (allBytes >= size) {
+//                            //System.out.println("Out for " + allBytes);
+//                            end = true;
+//                        }
+//                    }
 
-                        allBytes += bytesRead;
-                        if (allBytes >= size) {
-                            //System.out.println("Out for " + allBytes);
-                            end = true;
-                        }
-                    }
+//                    if (Objects.deepEquals(Arrays.copyOf(buffer, allBytes), STOP.getBytes())) {
+//                        endOfSong = true;
+//                        break;
+//                    }
 
-                    if (Objects.deepEquals(Arrays.copyOf(buffer, allBytes), STOP.getBytes())) {
-                        endOfSong = true;
-                        break;
-                    }
-
-                    sourceDataLine.write(buffer, 0, allBytes);
+                    sourceDataLine.write(message.getValue(), 0, message.getValue().length);
                 }
-                int k;
+//                int k;
+//
+//                System.out.println("End while 1!");
+//
+//                while (!endOfSong) {
+//                    int size = inputStream.readInt();
+//                    System.out.println("Size is" + size);
+//                    boolean end = false;
+//                    int bytesRead = 0;
+//                    int allBytes = 0;
+//                    while (!end) {
+//                        bytesRead = inputStream.read(buffer);
+//
+//                        allBytes += bytesRead;
+//                        if (allBytes >= size) {
+//                            end = true;
+//                        }
+//                    }
+//
+//                    if (Objects.deepEquals(Arrays.copyOf(buffer, allBytes), STOP.getBytes())) {
+//                        endOfSong = true;
+//                    }
 
-                System.out.println("End while 1!");
-
-                while (!endOfSong) {
-                    int size = inputStream.readInt();
-                    System.out.println("Size is" + size);
-                    boolean end = false;
-                    int bytesRead = 0;
-                    int allBytes = 0;
-                    while (!end) {
-                        bytesRead = inputStream.read(buffer);
-
-                        allBytes += bytesRead;
-                        if (allBytes >= size) {
-                            end = true;
-                        }
-                    }
-
-                    if (Objects.deepEquals(Arrays.copyOf(buffer, allBytes), STOP.getBytes())) {
-                        endOfSong = true;
-                    }
-                }
 
                 // TODO client shouldn't be able to send any command except stop to the server while playing song
                 sourceDataLine.drain();
                 sourceDataLine.stop();
 
                 System.out.println("Stopping player!");
-            } catch (LineUnavailableException | IOException e) {
+            } catch (LineUnavailableException | IOException | ClassNotFoundException e) {
                 System.out.println("Error while playing music!" + e.getMessage());
-                Logger.logError(e.toString());
+                Logger.logError("Error while playing music!", e);
             }
         }
 

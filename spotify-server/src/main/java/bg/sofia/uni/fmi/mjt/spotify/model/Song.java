@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server.model;
+package bg.sofia.uni.fmi.mjt.spotify.model;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -18,16 +18,8 @@ public class Song implements Serializable {
         return songName;
     }
 
-    public void setSongName(String songName) {
-        this.songName = songName;
-    }
-
     public Path getPath() {
         return path;
-    }
-
-    public void setPath(Path path) {
-        this.path = path;
     }
 
     @Override

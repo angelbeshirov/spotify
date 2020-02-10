@@ -1,9 +1,9 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.io;
 
 import bg.sofia.uni.fmi.mjt.spotify.server.client.ClientHandler;
-import bg.sofia.uni.fmi.mjt.spotify.server.model.Playlist;
-import bg.sofia.uni.fmi.mjt.spotify.server.model.Song;
-import bg.sofia.uni.fmi.mjt.spotify.server.model.User;
+import bg.sofia.uni.fmi.mjt.spotify.model.Playlist;
+import bg.sofia.uni.fmi.mjt.spotify.model.Song;
+import bg.sofia.uni.fmi.mjt.spotify.model.User;
 
 import java.io.File;
 import java.io.IOException;

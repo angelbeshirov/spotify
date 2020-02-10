@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server.model;
+package bg.sofia.uni.fmi.mjt.spotify.model;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -32,14 +32,6 @@ public class User implements Serializable {
 
     public String getPassword() {
         return password;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     @Override

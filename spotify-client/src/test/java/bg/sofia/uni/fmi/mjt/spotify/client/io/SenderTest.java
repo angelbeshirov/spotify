@@ -1,21 +1,17 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
-import bg.sofia.uni.fmi.mjt.spotify.client.music.MusicPlayer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author angel.beshirov
@@ -47,8 +43,7 @@ public class SenderTest {
         System.setIn(new ByteArrayInputStream("sample command to send\n disconnect\n".getBytes()));
         Socket socket = mock(Socket.class);
         Receiver receiver = mock(Receiver.class);
-        MusicPlayer musicPlayer = mock(MusicPlayer.class);
-        Sender sender = new Sender(socket, receiver, musicPlayer);
+        Sender sender = new Sender(socket, receiver);
 
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         when(socket.getOutputStream()).thenReturn(bs);
@@ -59,5 +54,38 @@ public class SenderTest {
 
         assertTrue(bs.toString().contains("sample command to send"));
         assertTrue(bs.toString().contains("disconnect"));
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void testStoppingPlayingMusic() throws IOException, InterruptedException {
+        System.setIn(new ByteArrayInputStream("stop\n disconnect\n".getBytes()));
+        Socket socket = mock(Socket.class);
+        Receiver receiver = mock(Receiver.class);
+        Sender sender = new Sender(socket, receiver);
+
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        when(socket.getOutputStream()).thenReturn(bs);
+        when(receiver.isPlaying()).thenReturn(true);
+
+        executorService.execute(sender);
+
+        Thread.sleep(MILLIS);
+
+//        ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(convertToBytes()))
+//        bs.toByteArray();
+//        assertTrue(bs.toString().contains("stop"));
+//        assertTrue(bs.toString().contains("disconnect"));
+        Mockito.verify(receiver, times(1)).stopPlaying();
+    }
+
+    private <T extends Serializable> byte[] convertToBytes(T serializable) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream os = new ObjectOutputStream(bos)) {
+            os.writeObject(serializable);
+        } catch (IOException e) {
+            System.out.println("Error while serializing!" + e.getMessage());
+        }
+
+        return bos.toByteArray();
     }
 }

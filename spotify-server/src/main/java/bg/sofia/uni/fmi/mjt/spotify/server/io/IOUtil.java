@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.io;
 
-import bg.sofia.uni.fmi.mjt.spotify.server.model.Playlist;
-import bg.sofia.uni.fmi.mjt.spotify.server.model.User;
+import bg.sofia.uni.fmi.mjt.spotify.model.Playlist;
+import bg.sofia.uni.fmi.mjt.spotify.model.User;
 
 import java.io.*;
 import java.nio.file.Files;

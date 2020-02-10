@@ -1,14 +1,10 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.logging;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * TODO think about synchronizing this cuz it will be used by multiple threads
- *
  * @author angel.beshirov
  */
 public class Logger {
@@ -16,7 +12,6 @@ public class Logger {
     private final static String LOG_PATH = "src\\main\\resources\\spotify-client.log";
     private static final String ERROR = "[ERROR] ";
     private static final String INFO = "[INFO] ";
-    private static final String WARN = "[WARN] ";
 
     static {
         File f = new File(LOG_PATH);
@@ -27,21 +22,17 @@ public class Logger {
         }
     }
 
-    public static void logError(String message) {
-        writeToFile(Path.of(LOG_PATH), ERROR + message);
-    }
-
-    public static void logWarning(String message) {
-        writeToFile(Path.of(LOG_PATH), WARN + message);
+    public static void logError(String message, Throwable throwable) {
+        writeToFile(ERROR + message + throwable.getMessage());
     }
 
     public static void logInfo(String message) {
-        writeToFile(Path.of(LOG_PATH), INFO + message);
+        writeToFile(INFO + message);
     }
 
-    private static synchronized void writeToFile(Path file, String message) {
-        try (var oos = new OutputStreamWriter(Files.newOutputStream(file))) {
-            oos.write(message);
+    private static synchronized void writeToFile(String message) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(LOG_PATH, true))) {
+            out.println(message);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,13 +1,11 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.client;
 
-import bg.sofia.uni.fmi.mjt.spotify.server.model.*;
+import bg.sofia.uni.fmi.mjt.spotify.model.*;
 import com.google.gson.Gson;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,47 +15,80 @@ import java.util.Optional;
  * @author angel.beshirov
  */
 public class ClientHandler implements Runnable {
-    private static final Gson GSON = new Gson();
     private static final String SPACE = " ";
     private final Socket socket;
-    private final CommandHandler commandHandler;
+    private CommandHandler commandHandler;
+    private Map<User, ClientHandler> clients;
+    private Map<Song, Integer> currentlyPlaying;
+    private List<Song> songs;
+    private List<Playlist> playlists;
+    private List<User> registeredUsers;
+    private ObjectOutputStream objectOutputStream;
+
 
     private volatile boolean isRunning;
 
     // TODO group all 3 lists into an object
-    public ClientHandler(Socket socket, Map<User, ClientHandler> clients, List<User> registeredUsers, List<Playlist> playlists, List<Song> songs, Map<Song, Integer> currentlyPlaying) {
+    public ClientHandler(Socket socket,
+                         Map<User, ClientHandler> clients,
+                         List<User> registeredUsers,
+                         List<Playlist> playlists,
+                         List<Song> songs,
+                         Map<Song, Integer> currentlyPlaying) {
         this.socket = socket;
-        this.commandHandler = new CommandHandler(this, clients, registeredUsers, playlists, songs, currentlyPlaying);
+        this.clients = clients;
+        this.registeredUsers = registeredUsers;
+        this.playlists = playlists;
+        this.songs = songs;
+        this.currentlyPlaying = currentlyPlaying;
         this.isRunning = true;
     }
 
-    public Socket getSocket() {
-        return socket;
+    public ObjectOutputStream getObjectOutputStream() {
+        return objectOutputStream;
     }
 
     @Override
     public void run() {
-        try (PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String command = reader.readLine();
-            while (isRunning && command != null) {
-                System.out.println("Command received from client: " + command);
-                String[] data = command.split(SPACE);
+        try {
+            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
-                Optional<Command> internalCommand = getInternalCommand(data[0]);
+            this.commandHandler = new CommandHandler(this, clients, registeredUsers, playlists, songs, currentlyPlaying);
 
-                internalCommand
-                        .map(x -> commandHandler.handleCommand(x, Arrays.copyOfRange(data, 1, data.length)))
-                        .orElseGet(() -> Optional.of(GSON.toJson(new Message(MessageType.TEXT, "Invalid command!"))))
-                        .ifPresent(printWriter::println);
 
-                command = reader.readLine();
+            Message message = (Message) objectInputStream.readObject();
+
+            while (isRunning) {
+                if (message != null && message.getMessageType() == MessageType.TEXT) {
+                    String command = new String(message.getValue(), Charset.defaultCharset());
+
+                    System.out.println("Command received from client: " + command);
+                    String[] data = command.split(SPACE);
+
+                    Optional<Command> internalCommand = getInternalCommand(data[0]);
+
+                    internalCommand
+                            .map(x -> commandHandler.handleCommand(x, Arrays.copyOfRange(data, 1, data.length)))
+                            .orElseGet(() -> Optional.of(new Message(MessageType.TEXT, "Invalid command!".getBytes())))
+                            .ifPresent(obj -> {
+                                try {
+                                    objectOutputStream.writeObject(obj);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+
+                    message = (Message) objectInputStream.readObject();
+                }
             }
         } catch (final IOException e) {
             System.out.println("Error with the connection." + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("Error with deserialization." + e.getMessage());
         } finally {
             try {
-                socket.close();
+                socket.close(); // TODO close streams
             } catch (IOException e) {
                 System.out.println("Error while closing the client socket!");
             }

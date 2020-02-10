@@ -1,8 +1,8 @@
-package bg.sofia.uni.fmi.mjt.spotify.client.model;
+package bg.sofia.uni.fmi.mjt.spotify.model;
 
 /**
  * The types of messages received from the server.
  */
 public enum MessageType {
-    TEXT, JSON
+    TEXT, SONG_INFO, SONG_PAYLOAD
 }

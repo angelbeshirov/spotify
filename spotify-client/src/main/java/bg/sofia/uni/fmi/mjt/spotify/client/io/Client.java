@@ -2,8 +2,12 @@ package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.client.music.MusicPlayer;
+import bg.sofia.uni.fmi.mjt.spotify.model.Message;
+import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
@@ -18,24 +22,23 @@ public final class Client {
 
     public void start() {
         try (Socket socket = new Socket("localhost", SERVER_PORT)) {
-            MusicPlayer musicPlayer = new MusicPlayer(socket.getInputStream());
-            Receiver receiver = new Receiver(socket, musicPlayer);
-            Sender sender = new Sender(socket, receiver, musicPlayer);
+            Receiver receiver = new Receiver(socket);
+            Sender sender = new Sender(socket, receiver);
 
-            Thread serverReaderThread = new Thread(receiver);
-            Thread serverWriterThread = new Thread(sender);
+            Thread senderThread = new Thread(sender);
+            Thread readerThread = new Thread(receiver);
 
-            serverReaderThread.start();
-            serverWriterThread.start();
+            senderThread.start();
+            readerThread.start();
 
-            serverReaderThread.join();
-            serverWriterThread.join();
+            senderThread.join();
+            readerThread.join();
         } catch (IOException e) {
             System.out.println("Error with the server!");
-            Logger.logError(e.toString());
+            Logger.logError("Error with the server!", e);
         } catch (InterruptedException e) {
             System.out.println("Error with the client!");
-            Logger.logError(e.toString());
+            Logger.logError("Error with the client!", e);
         }
     }
 }

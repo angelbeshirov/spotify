@@ -1,0 +1,32 @@
+package bg.sofia.uni.fmi.mjt.spotify.model;
+
+import java.io.Serializable;
+
+/**
+ * @author angel.beshirov
+ */
+public class Message implements Serializable {
+    private static final long serialVersionUID = -8330694407465678518L;
+    private MessageType messageType;
+    private byte[] value;
+
+    public Message(MessageType messageType, byte[] value) {
+        this.messageType = messageType;
+        this.value = value;
+    }
+
+    public MessageType getMessageType() {
+        return messageType;
+    }
+
+    public byte[] getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "messageType=" + messageType +
+                '}';
+    }
+}
