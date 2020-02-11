@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server.logging;
+package bg.sofia.uni.fmi.mjt.spotify.server.logging.impl;
 
 import java.io.File;
 import java.io.FileWriter;

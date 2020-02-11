@@ -4,7 +4,7 @@ import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;

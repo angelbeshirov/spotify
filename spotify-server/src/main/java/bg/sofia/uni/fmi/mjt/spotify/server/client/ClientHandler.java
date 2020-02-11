@@ -4,7 +4,7 @@ import bg.sofia.uni.fmi.mjt.spotify.model.Command;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
+ * Handles client connection in a separate thread.
+ *
  * @author angel.beshirov
  */
 public class ClientHandler implements Runnable {

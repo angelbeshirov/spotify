@@ -1,12 +1,14 @@
 package bg.sofia.uni.fmi.mjt.spotify.server;
 
 import bg.sofia.uni.fmi.mjt.spotify.server.impl.NetServer;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 
 /**
+ * The entry point of the server application.
+ *
  * @author angel.beshirov
  */
 public class Runner {

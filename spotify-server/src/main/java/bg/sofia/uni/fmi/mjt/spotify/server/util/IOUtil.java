@@ -3,7 +3,7 @@ package bg.sofia.uni.fmi.mjt.spotify.server.util;
 import bg.sofia.uni.fmi.mjt.spotify.model.Playlist;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
 import bg.sofia.uni.fmi.mjt.spotify.model.User;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -14,6 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
+ * Contains IO utilify functions for serializing and deserializing the data
+ * which is used by the server like collection of {@link User}s, collection
+ * and {@link Playlist}s and also for retrieving the names of the songs
+ * stored on the server available for streaming to the client.
+ *
  * @author angel.beshirov
  */
 public class IOUtil {

@@ -1,9 +1,9 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.client;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.*;
-import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -16,14 +16,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * @author angel.beshirov
- * TODO in properties the directory path
- * TODO multiple arguments can be concatenated
- * TODO somehow improve with play method
- * TODO figure out what rate to stream data so that song can end someone on the same time - resolved
- * TODO disconnect/tests/top N - top N and disconnect - resolved
+ * Contains the logic for handling commands from the client.
  *
- * TODO writing tests
+ * @author angel.beshirov
  */
 public class CommandHandler {
     private static final int MUSIC_PLAY_DELAY_SECONDS = 1;
