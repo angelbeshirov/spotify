@@ -8,10 +8,7 @@ import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Contains IO utilify functions for serializing and deserializing the data
@@ -44,31 +41,31 @@ public class IOUtil {
         }
     }
 
-    public static List<User> deserializeUsers(Path path) {
-        List<User> users = new ArrayList<>();
+    public static Set<User> deserializeUsers(Path path) {
+        Set<User> users = new HashSet<>();
         if (!path.toFile().exists()) {
             return users;
         }
 
         return deserialize(path)
-                .map(object -> (List<User>) object)
+                .map(object -> (Set<User>) object)
                 .orElse(users);
     }
 
-    public static List<Playlist> deserializePlaylists(Path path) {
-        List<Playlist> playlists = new ArrayList<>();
+    public static Set<Playlist> deserializePlaylists(Path path) {
+        Set<Playlist> playlists = new HashSet<>();
         if (!path.toFile().exists()) {
             return playlists;
         }
 
         return deserialize(path)
-                .map(object -> (List<Playlist>) object)
+                .map(object -> (Set<Playlist>) object)
                 .orElse(playlists);
     }
 
-    public static List<Song> retrieveSongs(Path directory) {
+    public static Set<Song> retrieveSongs(Path directory) {
         File file = directory.toFile();
-        List<Song> songs = new ArrayList<>();
+        Set<Song> songs = new HashSet<>();
         if (file.isDirectory()) {
             songs.addAll(iterateSongs(file.listFiles()));
         }
@@ -76,8 +73,8 @@ public class IOUtil {
         return songs;
     }
 
-    private static List<Song> iterateSongs(File[] files) {
-        List<Song> songs = new ArrayList<>();
+    private static Set<Song> iterateSongs(File[] files) {
+        Set<Song> songs = new HashSet<>();
 
         if (files != null) {
             for (File file : files) {
@@ -111,7 +108,7 @@ public class IOUtil {
         try (var ois = new ObjectInputStream(Files.newInputStream(path))) {
             result = ois.readObject();
         } catch (EOFException e) {
-            System.out.println("No playlists!");
+            System.out.println("No data!");
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

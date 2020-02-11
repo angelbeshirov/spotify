@@ -18,9 +18,9 @@ public class ServerData {
     private static final Path PLAYLISTS_PATH = Path.of("src\\main\\resources\\playlists.bin");
     private static final Path SONGS_PATH = Path.of("src\\main\\resources\\songs");
 
-    private final List<User> savedUsers;
-    private final List<Playlist> playlists;
-    private final List<Song> songs;
+    private final Set<User> savedUsers;
+    private final Set<Playlist> playlists;
+    private final Set<Song> songs;
 
     private final Map<User, ClientHandler> clients;
     private final Map<Song, Integer> currentlyPlaying;
@@ -28,11 +28,11 @@ public class ServerData {
     public ServerData() {
         this.clients = new ConcurrentHashMap<>();
         this.currentlyPlaying = new ConcurrentHashMap<>();
-        this.savedUsers = Collections.synchronizedList(new ArrayList<>(
+        this.savedUsers = Collections.synchronizedSet(new HashSet<>(
                 IOUtil.deserializeUsers(USERS_PATH)));
-        this.playlists = Collections.synchronizedList(new ArrayList<>(
+        this.playlists = Collections.synchronizedSet(new HashSet<>(
                 IOUtil.deserializePlaylists(PLAYLISTS_PATH)));
-        this.songs = Collections.synchronizedList(new ArrayList<>(
+        this.songs = Collections.synchronizedSet(new HashSet<>(
                 IOUtil.retrieveSongs(SONGS_PATH)));
     }
 
@@ -53,23 +53,24 @@ public class ServerData {
     }
 
     public User getUser(User user) {
-        int index = savedUsers.indexOf(user);
-
-        if (index != -1) {
-            return savedUsers.get(index);
+        for (User savedUser : savedUsers) {
+            if (savedUser.equals(user)) {
+                return savedUser;
+            }
         }
 
         return null;
     }
 
     public Playlist getPlaylist(Playlist playlist) {
-        int index = playlists.indexOf(playlist);
-
-        if (index != -1) {
-            return playlists.get(index);
+        for (Playlist savedPlaylist : playlists) {
+            if (savedPlaylist.equals(playlist)) {
+                return savedPlaylist;
+            }
         }
 
         return null;
+
     }
 
     public void addLoggedInUser(User user, ClientHandler clientHandler) {
@@ -93,7 +94,7 @@ public class ServerData {
         return null;
     }
 
-    public List<Song> getSongs() {
+    public Set<Song> getSongs() {
         return songs;
     }
 
@@ -112,10 +113,10 @@ public class ServerData {
         }
     }
 
-    public List<Map.Entry<Song, Integer>> getTopNCurrentlyPlayingSorted(int n) {
+    public Set<Map.Entry<Song, Integer>> getTopNCurrentlyPlayingSorted(int n) {
         return currentlyPlaying.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .limit(n)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 }

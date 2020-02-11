@@ -188,7 +188,7 @@ public class CommandHandlerTest {
         topSongs.put(topSong, TIMES);
 
         when(serverData.getTopNCurrentlyPlayingSorted(TOP_N_SONGS))
-                .thenReturn(new ArrayList<>(topSongs.entrySet()));
+                .thenReturn(new HashSet<>(topSongs.entrySet()));
 
         Optional<Message> msg =
                 commandHandler.handleCommand(Command.TOP, TOP_N);
@@ -196,7 +196,8 @@ public class CommandHandlerTest {
         Assert.assertTrue(msg.isPresent());
         Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
         String actual = new String(msg.get().getValue(), Charset.defaultCharset());
-        String expected = "Top playing songs are: " + topSong.getSongName() + ": " + TIMES + System.lineSeparator();
+        String expected = "Top playing songs are: " + topSong.getSongName() + ": " +
+                TIMES + System.lineSeparator();
         Assert.assertEquals(expected, actual);
     }
 
@@ -226,7 +227,8 @@ public class CommandHandlerTest {
         String expected = "Playlist was created successfully!";
         Assert.assertEquals(expected, actual);
 
-        Mockito.verify(serverData, times(1)).addPlaylist(eq(new Playlist("new-playlist", EMAIL)));
+        Mockito.verify(serverData, times(1))
+                .addPlaylist(eq(new Playlist("new-playlist", EMAIL)));
     }
 
     @Test
@@ -327,7 +329,7 @@ public class CommandHandlerTest {
         Song song2 = new Song("not 1", new File("src\\main"));
 
 
-        when(serverData.getSongs()).thenReturn(Arrays.asList(song1, song2));
+        when(serverData.getSongs()).thenReturn(Set.of(song1, song2));
         Optional<Message> msg =
                 commandHandler.handleCommand(Command.SEARCH, "test");
 

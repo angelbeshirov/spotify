@@ -12,9 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,8 +52,8 @@ public class IOUtilTest {
         when(file.isDirectory()).thenReturn(true);
         when(file.listFiles()).thenReturn(new File[]{file1, file2});
 
-        List<Song> songs = IOUtil.retrieveSongs(path);
-        Assert.assertEquals(Arrays.asList(new Song(file1.getName(), file1),
+        Set<Song> songs = IOUtil.retrieveSongs(path);
+        Assert.assertEquals(Set.of(new Song(file1.getName(), file1),
                 new Song(file2.getName(), file2)), songs);
     }
 }

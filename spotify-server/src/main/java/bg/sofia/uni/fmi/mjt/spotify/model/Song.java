@@ -35,7 +35,7 @@ public class Song implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ;
+
         Song song = (Song) o;
         return Objects.equals(songName, song.songName) &&
                 Objects.equals(file, song.file);

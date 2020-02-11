@@ -45,11 +45,8 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        try {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream())){
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            // output stream must be created before input stream
-            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-
             commandHandler = new CommandHandler(this, serverData);
 
             Message message;

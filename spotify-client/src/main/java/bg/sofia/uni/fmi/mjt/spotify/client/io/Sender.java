@@ -17,7 +17,7 @@ import java.io.ObjectOutputStream;
 public class Sender implements Runnable {
     public static final String STOP = "stop";
     private static final String DISCONNECT = "disconnect";
-    public static final String ERROR_SENDING_MESSAGE = "Error while sending message to server!";
+    private static final String ERROR_SENDING_MESSAGE = "Error while sending message to server!";
 
     private final Receiver receiver;
     private final ObjectOutputStream writer;

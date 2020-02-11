@@ -202,7 +202,7 @@ public class CommandHandler {
                     "You have to log in before you can get information about top songs!".getBytes()));
         }
 
-        List<Map.Entry<Song, Integer>> sorted =
+        Set<Map.Entry<Song, Integer>> sorted =
                 serverData.getTopNCurrentlyPlayingSorted(Integer.parseInt(args[0]));
 
         StringBuilder sb = new StringBuilder("Top playing songs are: ");
