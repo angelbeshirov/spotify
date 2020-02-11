@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
+ * Custom logger implementation for keeping exception.
+ *
  * @author angel.beshirov
  */
 public class Logger {

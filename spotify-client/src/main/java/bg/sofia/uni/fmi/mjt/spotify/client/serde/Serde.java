@@ -1,15 +1,15 @@
-package bg.sofia.uni.fmi.mjt.spotify.client.util;
+package bg.sofia.uni.fmi.mjt.spotify.client.serde;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
 
 import java.io.*;
 
 /**
- * Contains utility functions.
+ * Contains serialization and deserialization functions.
  *
  * @author angel.beshirov
  */
-public class Util {
+public class Serde {
 
     private static final String DESERIALIZING_ERROR = "Error while deserializing!";
     private static final String SERIALIZING_ERROR = "Error while serializing!";

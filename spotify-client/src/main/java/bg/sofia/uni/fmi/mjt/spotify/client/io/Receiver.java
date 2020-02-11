@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
-import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
+import bg.sofia.uni.fmi.mjt.spotify.client.serde.Serde;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
+ * Receives data from the server and acts accordingly.
+ *
  * @author angel.beshirov
  */
 public class Receiver implements Runnable {
@@ -58,7 +60,7 @@ public class Receiver implements Runnable {
                     }
                 } else if (MessageType.SONG_INFO == message.getMessageType()) {
                     System.out.println("Playing...");
-                    SongInfo songInfo = (SongInfo) Util.deserialize(message.getValue());
+                    SongInfo songInfo = (SongInfo) Serde.deserialize(message.getValue());
 
                     AudioFormat format = new AudioFormat(new AudioFormat.Encoding(
                             songInfo.getEncoding()),

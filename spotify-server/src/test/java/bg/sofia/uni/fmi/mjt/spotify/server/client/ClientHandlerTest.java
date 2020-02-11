@@ -3,64 +3,56 @@ package bg.sofia.uni.fmi.mjt.spotify.server.client;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
-import bg.sofia.uni.fmi.mjt.spotify.server.io.IOUtil;
-import bg.sofia.uni.fmi.mjt.spotify.server.io.Server;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author angel.beshirov
  */
 public class ClientHandlerTest {
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(2);
+    public static final int SLEEP = 1500;
+    public static final int TIMEOUT = 5000;
+    private ExecutorService executorService = Executors.newFixedThreadPool(1);
     private ClientHandler clientHandler;
     private Socket socket;
-    private ServerSocket serverSocket;
     private ServerData serverData;
 
     @Before
-    public void setUp() throws IOException {
-        serverSocket = mock(ServerSocket.class);
+    public void setUp() {
         socket = mock(Socket.class);
         serverData = mock(ServerData.class);
-
-        when(serverSocket.accept()).thenReturn(socket).thenThrow();
     }
 
-    @Test
-    public void testCommandReading() throws IOException {
+    @Test(timeout = TIMEOUT)
+    public void testCommandReading() throws IOException, InterruptedException {
         Message message = new Message(MessageType.TEXT, "this is sample text message".getBytes());
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtil.serialize(message));
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        clientHandler = new ClientHandler(socket, serverData);
 
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
         when(socket.getOutputStream()).thenReturn(bs);
 
-//        executorService.execute(new Thread(new ClientHandler(socket, serverData)));
+        Message expected = new Message(MessageType.TEXT, "Invalid command!".getBytes());
 
+        executorService.execute(clientHandler);
+        Thread.sleep(SLEEP);
+        clientHandler.stop();
 
-        executorService.execute(() -> {
-            Server server = new Server(serverSocket);
-            try {
-                server.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-//        executorService.execute(clientHandler);
-
+        Assert.assertArrayEquals(bs.toByteArray(), IOUtil.serialize(expected));
+        Mockito.verify(socket, times(1)).close();
     }
 }

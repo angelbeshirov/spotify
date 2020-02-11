@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
-import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
+import bg.sofia.uni.fmi.mjt.spotify.client.serde.Serde;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
@@ -57,7 +57,7 @@ public class ReceiverTest {
     public void testTextReading() throws IOException, InterruptedException {
         Message message = new Message(MessageType.TEXT, "this is sample text message".getBytes());
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Serde.serialize(message));
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
 
         Receiver receiver = new Receiver(new ObjectInputStream(byteArrayInputStream),
@@ -80,9 +80,9 @@ public class ReceiverTest {
         songInfo.setSampleRate(SAMPLE_RATE);
         songInfo.setSampleSizeInBits(SAMPLE_SIZE_IN_BITS);
         songInfo.setFrameSize(FRAME_SIZE);
-        Message message = new Message(MessageType.SONG_INFO, Util.serialize(songInfo));
+        Message message = new Message(MessageType.SONG_INFO, Serde.serialize(songInfo));
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Serde.serialize(message));
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
 
         Receiver receiver = new Receiver(new ObjectInputStream(byteArrayInputStream),
@@ -103,10 +103,10 @@ public class ReceiverTest {
         songInfo.setSampleRate(SAMPLE_RATE);
         songInfo.setSampleSizeInBits(SAMPLE_SIZE_IN_BITS);
         songInfo.setFrameSize(FRAME_SIZE);
-        Message message = new Message(MessageType.SONG_INFO, Util.serialize(songInfo));
+        Message message = new Message(MessageType.SONG_INFO, Serde.serialize(songInfo));
 
         ByteArrayInputStream byteArrayInputStream =
-                new ByteArrayInputStream(Util.serialize(message));
+                new ByteArrayInputStream(Serde.serialize(message));
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
 

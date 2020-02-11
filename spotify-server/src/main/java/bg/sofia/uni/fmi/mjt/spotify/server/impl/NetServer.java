@@ -1,6 +1,7 @@
-package bg.sofia.uni.fmi.mjt.spotify.server.io;
+package bg.sofia.uni.fmi.mjt.spotify.server.impl;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
+import bg.sofia.uni.fmi.mjt.spotify.server.Server;
 import bg.sofia.uni.fmi.mjt.spotify.server.client.ClientHandler;
 
 import java.io.IOException;
@@ -10,11 +11,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * Multi-threaded net server implementation.
+ * Accepts client connections and handles them in a separate thread.
+ *
  * @author angel.beshirov
  */
-public class Server {
+public class NetServer implements Server {
 
-    private static final int SERVER_PORT = 4444;
     private static final int MAX_THREADS = 15;
     private final ExecutorService executorService;
     private final ServerSocket serverSocket;
@@ -25,7 +28,7 @@ public class Server {
     /**
      * Spotify server default initialization.
      */
-    public Server(ServerSocket serverSocket) {
+    public NetServer(ServerSocket serverSocket) {
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.serverData = new ServerData();
         this.isRunning = false;
@@ -33,8 +36,9 @@ public class Server {
     }
 
     /**
-     * Starts the server on the specified port.
+     * Listens for connections and starts them in a separate thread.
      */
+    @Override
     public void start() throws IOException {
         this.isRunning = true;
         System.out.println("Server started and listening for connection requests!");
@@ -52,6 +56,7 @@ public class Server {
 
     }
 
+    @Override
     public void stop() {
         this.isRunning = false;
     }

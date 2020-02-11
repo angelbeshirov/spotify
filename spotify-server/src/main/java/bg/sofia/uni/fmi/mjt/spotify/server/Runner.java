@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.server;
 
-import bg.sofia.uni.fmi.mjt.spotify.server.io.Server;
+import bg.sofia.uni.fmi.mjt.spotify.server.impl.NetServer;
 import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ public class Runner {
 
     public static void main(final String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
-            Server server = new Server(serverSocket);
+            Server server = new NetServer(serverSocket);
             server.start();
         } catch (IOException e) {
             System.out.println(SERVER_ERROR);

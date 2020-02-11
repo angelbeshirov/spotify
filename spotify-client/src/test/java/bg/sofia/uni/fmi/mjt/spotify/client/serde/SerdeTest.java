@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.client.util;
+package bg.sofia.uni.fmi.mjt.spotify.client.serde;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
@@ -13,7 +13,7 @@ import java.io.ObjectOutputStream;
 /**
  * @author angel.beshirov
  */
-public class UtilTest {
+public class SerdeTest {
 
     @Test
     public void testSerialize() {
@@ -21,7 +21,7 @@ public class UtilTest {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutputStream os = new ObjectOutputStream(bos)) {
             os.writeObject(message);
-            Assert.assertArrayEquals(bos.toByteArray(), Util.serialize(message));
+            Assert.assertArrayEquals(bos.toByteArray(), Serde.serialize(message));
         } catch (IOException e) {
             System.out.println("Error while serializing!");
             Logger.logError("Error while deserializing object!", e);
@@ -32,8 +32,8 @@ public class UtilTest {
     @Test
     public void testDeserialize() {
         Message message = new Message(MessageType.TEXT, "value 1 2 3".getBytes());
-        byte[] payload = Util.serialize(message);
-        Message actual = (Message) Util.deserialize(payload);
+        byte[] payload = Serde.serialize(message);
+        Message actual = (Message) Serde.deserialize(payload);
 
         Assert.assertEquals(message.getMessageType(), actual.getMessageType());
         Assert.assertArrayEquals(message.getValue(), actual.getValue());

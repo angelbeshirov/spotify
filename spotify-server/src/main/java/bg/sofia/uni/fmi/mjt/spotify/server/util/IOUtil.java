@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server.io;
+package bg.sofia.uni.fmi.mjt.spotify.server.util;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.Playlist;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
@@ -96,7 +96,6 @@ public class IOUtil {
         return result;
     }
 
-    // does this need to be synchronized?
     private static synchronized Optional<Object> deserialize(Path path) {
         Object result = null;
         try (var ois = new ObjectInputStream(Files.newInputStream(path))) {

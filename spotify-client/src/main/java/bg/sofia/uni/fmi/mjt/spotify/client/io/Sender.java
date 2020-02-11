@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 
 /**
+ * Reads commands from the user and sends them to the server.
+ *
  * @author angel.beshirov
  */
 public class Sender implements Runnable {
@@ -52,7 +54,7 @@ public class Sender implements Runnable {
                 writer.writeObject(message);
             }
         } catch (IOException e) {
-            System.out.println(ERROR_SENDING_MESSAGE + e.getMessage());
+            System.out.println(ERROR_SENDING_MESSAGE);
             Logger.logError(ERROR_SENDING_MESSAGE, e);
         }
     }

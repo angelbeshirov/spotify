@@ -1,5 +1,8 @@
-package bg.sofia.uni.fmi.mjt.spotify.client.io;
+package bg.sofia.uni.fmi.mjt.spotify.client.impl;
 
+import bg.sofia.uni.fmi.mjt.spotify.client.Client;
+import bg.sofia.uni.fmi.mjt.spotify.client.io.Receiver;
+import bg.sofia.uni.fmi.mjt.spotify.client.io.Sender;
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
 
 import java.io.IOException;
@@ -8,17 +11,21 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
+ * Initializes the streams and starts 2 threads, receiver and
+ * sender thread.
+ *
  * @author angel.beshirov
  */
-public final class Client {
+public final class NetClient implements Client {
     private static final String CLIENT_ERROR = "Error with the client!";
 
     private final Socket socket;
 
-    public Client(Socket socket) {
+    public NetClient(Socket socket) {
         this.socket = socket;
     }
 
+    @Override
     public void start() throws IOException {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream())) {

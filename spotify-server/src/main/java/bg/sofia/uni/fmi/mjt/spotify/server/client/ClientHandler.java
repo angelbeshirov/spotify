@@ -9,7 +9,6 @@ import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -45,7 +44,6 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            OutputStream os = socket.getOutputStream();
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             // output stream must be created before input stream
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());

@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.client;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.*;
-import bg.sofia.uni.fmi.mjt.spotify.server.io.IOUtil;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
 import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
 

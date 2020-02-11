@@ -17,15 +17,14 @@ import static org.mockito.Mockito.*;
  * @author angel.beshirov
  */
 public class CommandHandlerTest {
-    public static final String EMAIL = "ivan@abv.bg";
-    public static final String PASSWORD = "pass123";
-    public static final double DELTA = 0.001;
-    public static final String TOP_N = "3";
-    public static final int TOP_N_SONGS = 3;
-    public static final int TIMES = 4;
+    private static final String EMAIL = "ivan@abv.bg";
+    private static final String PASSWORD = "pass123";
+    private static final double DELTA = 0.001;
+    private static final String TOP_N = "3";
+    private static final int TOP_N_SONGS = 3;
+    private static final int TIMES = 4;
 
     private ServerData serverData;
-    private ClientHandler clientHandler;
     private CommandHandler commandHandler;
 
     private User user;
@@ -33,7 +32,7 @@ public class CommandHandlerTest {
     @Before
     public void setUp() {
         serverData = mock(ServerData.class);
-        clientHandler = mock(ClientHandler.class);
+        ClientHandler clientHandler = mock(ClientHandler.class);
         commandHandler = new CommandHandler(clientHandler, serverData);
 
         user = new User(EMAIL, PASSWORD);
@@ -48,7 +47,9 @@ public class CommandHandlerTest {
 
         Assert.assertTrue(msg.isPresent());
         Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("Successfully logged in!".getBytes(), msg.get().getValue());
+        String expected = "Successfully logged in!";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -60,7 +61,9 @@ public class CommandHandlerTest {
 
         Assert.assertTrue(msg.isPresent());
         Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("Wrong password".getBytes(), msg.get().getValue());
+        String expected = "Wrong password";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -71,8 +74,9 @@ public class CommandHandlerTest {
                 commandHandler.handleCommand(Command.LOGIN, EMAIL);
 
         Assert.assertTrue(msg.isPresent());
-        Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("Invalid arguments for login!".getBytes(), msg.get().getValue());
+        String expected = "Invalid arguments for login!";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -81,8 +85,9 @@ public class CommandHandlerTest {
                 commandHandler.handleCommand(Command.REGISTER, EMAIL, PASSWORD);
 
         Assert.assertTrue(msg.isPresent());
-        Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("Registration was successful".getBytes(), msg.get().getValue());
+        String expected = "Registration was successful";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -92,9 +97,9 @@ public class CommandHandlerTest {
                 commandHandler.handleCommand(Command.REGISTER, EMAIL, PASSWORD);
 
         Assert.assertTrue(msg.isPresent());
-        Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("User with this email address already exists!".getBytes(),
-                msg.get().getValue());
+        String expected = "User with this email address already exists!";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -103,9 +108,9 @@ public class CommandHandlerTest {
                 commandHandler.handleCommand(Command.REGISTER, EMAIL);
 
         Assert.assertTrue(msg.isPresent());
-        Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("Invalid arguments count for register!".getBytes(),
-                msg.get().getValue());
+        String expected = "Invalid arguments count for register!";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -113,7 +118,6 @@ public class CommandHandlerTest {
         login();
 
         commandHandler.handleCommand(Command.DISCONNECT);
-
         Mockito.verify(serverData, times(1)).logOut(eq(user));
     }
 
@@ -122,17 +126,19 @@ public class CommandHandlerTest {
         Optional<Message> msg =
                 commandHandler.handleCommand(Command.PLAY);
 
-
         Assert.assertTrue(msg.isPresent());
-        Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("Invalid arguments for song playing!".getBytes(), msg.get().getValue());
+        String expected = "Invalid arguments for song playing!";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
     public void testSongPlaying() {
         login();
 
-        when(serverData.getSongByName("test.wav")).thenReturn(new Song("test.wav", new File("src\\test\\resources\\songs\\test.wav")));
+        when(serverData.getSongByName("test.wav"))
+                .thenReturn(new Song("test.wav",
+                        new File("src\\test\\resources\\songs\\test.wav")));
 
         Optional<Message> msg =
                 commandHandler.handleCommand(Command.PLAY, "test.wav");
@@ -168,8 +174,9 @@ public class CommandHandlerTest {
                 commandHandler.handleCommand(Command.PLAY, "test.wav");
 
         Assert.assertTrue(msg.isPresent());
-        Assert.assertEquals(MessageType.TEXT, msg.get().getMessageType());
-        Assert.assertArrayEquals("There is no song with this name!".getBytes(), msg.get().getValue());
+        String expected = "There is no song with this name!";
+        String actual = new String(msg.get().getValue(), Charset.defaultCharset());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test

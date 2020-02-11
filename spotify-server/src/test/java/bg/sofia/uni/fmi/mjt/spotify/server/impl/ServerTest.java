@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.spotify.server.io;
+package bg.sofia.uni.fmi.mjt.spotify.server.impl;
 
 /**
  * @author angel.beshirov

@@ -3,6 +3,9 @@ package bg.sofia.uni.fmi.mjt.spotify.model;
 import java.io.Serializable;
 
 /**
+ * Contains the info needed for the client to
+ * start receiving song data.
+ *
  * @author angel.beshirov
  */
 public class SongInfo implements Serializable {

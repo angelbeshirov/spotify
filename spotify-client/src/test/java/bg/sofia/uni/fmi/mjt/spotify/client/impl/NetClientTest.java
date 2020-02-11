@@ -1,7 +1,8 @@
-package bg.sofia.uni.fmi.mjt.spotify.client.io;
+package bg.sofia.uni.fmi.mjt.spotify.client.impl;
 
 
-import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
+import bg.sofia.uni.fmi.mjt.spotify.client.Client;
+import bg.sofia.uni.fmi.mjt.spotify.client.serde.Serde;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import org.junit.After;
@@ -21,11 +22,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author angel.beshirov
  */
-public class ClientTest {
-
-    private Client client;
-
-    private Socket socket;
+public class NetClientTest {
 
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
@@ -33,10 +30,13 @@ public class ClientTest {
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
 
+    private Client client;
+    private Socket socket;
+
     @Before
     public void setUpStreams() {
         socket = mock(Socket.class);
-        client = new Client(socket);
+        client = new NetClient(socket);
         System.setOut(new PrintStream(outContent));
         System.setErr(new PrintStream(errContent));
     }
@@ -51,7 +51,7 @@ public class ClientTest {
     @Test
     public void testClientStart() throws Exception {
         Message message = new Message(MessageType.TEXT, "disconnect\n".getBytes());
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Serde.serialize(message));
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         System.setIn(byteArrayInputStream);
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);

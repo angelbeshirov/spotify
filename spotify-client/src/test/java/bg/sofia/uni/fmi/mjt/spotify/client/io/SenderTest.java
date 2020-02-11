@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
-import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
+import bg.sofia.uni.fmi.mjt.spotify.client.serde.Serde;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import org.junit.After;
@@ -56,7 +56,7 @@ public class SenderTest {
 
         byte[] arr = bs.toByteArray();
 
-        assertTrue(isSubArray(arr, Util.serialize(sampleCommand)));
+        assertTrue(isSubArray(arr, Serde.serialize(sampleCommand)));
     }
 
     @Test(timeout = TIMEOUT)
@@ -75,7 +75,7 @@ public class SenderTest {
         Mockito.verify(receiver, times(1)).stopPlaying();
     }
 
-    static boolean isSubArray(byte[] arr, byte[] subArr) {
+    private static boolean isSubArray(byte[] arr, byte[] subArr) {
         int n = arr.length;
         int m = subArr.length;
         int i = 0, j = 0;

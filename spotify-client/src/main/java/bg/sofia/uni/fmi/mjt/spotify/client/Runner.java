@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.client;
 
-import bg.sofia.uni.fmi.mjt.spotify.client.io.Client;
+import bg.sofia.uni.fmi.mjt.spotify.client.impl.NetClient;
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class Runner {
 
     public static void main(String... args) {
         try (Socket socket = new Socket("localhost", SERVER_PORT)) {
-            Client client = new Client(socket);
+            Client client = new NetClient(socket);
             client.start();
         } catch (IOException e) {
             System.out.println(SERVER_ERROR);
