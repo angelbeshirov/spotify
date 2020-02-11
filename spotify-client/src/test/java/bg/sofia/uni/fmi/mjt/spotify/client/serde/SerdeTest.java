@@ -23,8 +23,6 @@ public class SerdeTest {
             os.writeObject(message);
             Assert.assertArrayEquals(bos.toByteArray(), Serde.serialize(message));
         } catch (IOException e) {
-            System.out.println("Error while serializing!");
-            Logger.logError("Error while deserializing object!", e);
             Assert.fail();
         }
     }
