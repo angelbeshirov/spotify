@@ -3,6 +3,7 @@ package bg.sofia.uni.fmi.mjt.spotify.server.client;
 import bg.sofia.uni.fmi.mjt.spotify.model.*;
 import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.ExecutorUtil;
 import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
 
 import javax.sound.sampled.AudioFormat;
@@ -62,6 +63,10 @@ public class CommandHandler {
         }
 
         return Optional.empty();
+    }
+
+    public void close() {
+        ExecutorUtil.shutdown(executor);
     }
 
     private Optional<Message> handleRegister(String... args) {

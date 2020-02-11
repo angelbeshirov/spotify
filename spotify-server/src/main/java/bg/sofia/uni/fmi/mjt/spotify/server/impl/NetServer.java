@@ -3,12 +3,14 @@ package bg.sofia.uni.fmi.mjt.spotify.server.impl;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
 import bg.sofia.uni.fmi.mjt.spotify.server.Server;
 import bg.sofia.uni.fmi.mjt.spotify.server.client.ClientHandler;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.ExecutorUtil;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Multi-threaded net server implementation.
@@ -54,6 +56,7 @@ public class NetServer implements Server {
             executorService.execute(clientHandler);
         }
 
+        ExecutorUtil.shutdown(executorService);
     }
 
     @Override

@@ -3,7 +3,6 @@ package bg.sofia.uni.fmi.mjt.spotify.server.impl;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.server.Server;
-import bg.sofia.uni.fmi.mjt.spotify.server.client.ClientHandler;
 import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +45,7 @@ public class NetServerTest {
             Mockito.verify(socket, times(1)).getInputStream();
             Mockito.verify(socket, times(1)).getOutputStream();
         } catch (IOException e) {
-            // do nothing
+            // do nothing, stops the infinite loop
         }
     }
 }

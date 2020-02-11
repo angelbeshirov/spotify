@@ -87,6 +87,7 @@ public class ClientHandler implements Runnable {
             try {
                 objectOutputStream.close();
                 socket.close();
+                commandHandler.close();
             } catch (IOException e) {
                 System.out.println(CLIENT_ERROR_MSG);
                 Logger.logError(CLIENT_ERROR_MSG, e);

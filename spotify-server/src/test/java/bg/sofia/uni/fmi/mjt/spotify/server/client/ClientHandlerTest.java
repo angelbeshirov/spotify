@@ -3,10 +3,9 @@ package bg.sofia.uni.fmi.mjt.spotify.server.client;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.ExecutorUtil;
 import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
@@ -25,10 +24,19 @@ public class ClientHandlerTest {
 
     public static final int SLEEP = 1500;
     public static final int TIMEOUT = 5000;
-    private ExecutorService executorService = Executors.newFixedThreadPool(1);
-    private ClientHandler clientHandler;
+    private static ExecutorService executorService;
     private Socket socket;
     private ServerData serverData;
+
+    @BeforeClass
+    public static void init() {
+        executorService = Executors.newFixedThreadPool(1);
+    }
+
+    @AfterClass
+    public static void close() {
+        ExecutorUtil.shutdown(executorService);
+    }
 
     @Before
     public void setUp() {
@@ -41,7 +49,7 @@ public class ClientHandlerTest {
         Message message = new Message(MessageType.TEXT, "this is sample text message".getBytes());
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtil.serialize(message));
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        clientHandler = new ClientHandler(socket, serverData);
+        ClientHandler clientHandler = new ClientHandler(socket, serverData);
 
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
         when(socket.getOutputStream()).thenReturn(bs);

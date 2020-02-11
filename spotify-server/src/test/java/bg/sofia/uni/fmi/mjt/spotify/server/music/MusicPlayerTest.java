@@ -2,7 +2,10 @@ package bg.sofia.uni.fmi.mjt.spotify.server.music;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
+import bg.sofia.uni.fmi.mjt.spotify.server.util.ExecutorUtil;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -23,21 +26,29 @@ public class MusicPlayerTest {
     private static final int FRAME_SIZE = 4;
     private static final int TIMEOUT = 5000;
     private static final int SLEEP = 2000;
-    private ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private static ExecutorService executorService;
     private MusicPlayer musicPlayer;
-    private ByteArrayOutputStream bos;
-    private ObjectOutputStream objectOutputStream;
     private ServerData serverData;
     private Song song;
+
+    @BeforeClass
+    public static void init() {
+        executorService = Executors.newFixedThreadPool(1);
+    }
+
+    @AfterClass
+    public static void close() {
+        ExecutorUtil.shutdown(executorService);
+    }
 
     @Before
     public void setUp() throws IOException {
         song = new Song("test.wav",
                 new File("src\\test\\resources\\songs\\test.wav"));
 
-        objectOutputStream = mock(ObjectOutputStream.class);
+        ObjectOutputStream objectOutputStream;
         serverData = mock(ServerData.class);
-        bos = new ByteArrayOutputStream();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         objectOutputStream = new ObjectOutputStream(bos);
         musicPlayer = new MusicPlayer(song, objectOutputStream, serverData, FRAME_SIZE);
     }
