@@ -14,6 +14,10 @@ public class Serde {
     private static final String DESERIALIZING_ERROR = "Error while deserializing!";
     private static final String SERIALIZING_ERROR = "Error while serializing!";
 
+    private Serde() {
+
+    }
+
     public static <T extends Serializable> byte[] serialize(T serializable) {
         byte[] result = null;
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();

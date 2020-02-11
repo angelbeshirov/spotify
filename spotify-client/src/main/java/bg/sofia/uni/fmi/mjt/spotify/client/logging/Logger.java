@@ -1,8 +1,9 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.logging;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Custom logger implementation for keeping exception.
@@ -11,7 +12,7 @@ import java.nio.file.Path;
  */
 public class Logger {
 
-    private final static String LOG_PATH = "src\\main\\resources\\spotify-client.log";
+    private static final String LOG_PATH = "src\\main\\resources\\spotify-client.log";
     private static final String ERROR = "[ERROR] ";
     private static final String INFO = "[INFO] ";
 
@@ -20,8 +21,13 @@ public class Logger {
         try {
             f.createNewFile();
         } catch (IOException e) {
-            System.out.println("IO Exception while trying to initialize logger!" + e.getMessage());
+            System.out.println("IO Exception while trying to initialize logger!" +
+                    e.getMessage());
         }
+    }
+
+    private Logger() {
+
     }
 
     public static void logError(String message, Throwable throwable) {

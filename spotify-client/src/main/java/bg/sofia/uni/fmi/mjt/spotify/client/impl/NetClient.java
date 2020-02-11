@@ -27,8 +27,10 @@ public final class NetClient implements Client {
 
     @Override
     public void start() throws IOException {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream())) {
+        try (ObjectOutputStream objectOutputStream =
+                     new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream objectInputStream =
+                     new ObjectInputStream(socket.getInputStream())) {
             Receiver receiver = new Receiver(objectInputStream, objectOutputStream);
             Sender sender = new Sender(objectOutputStream, receiver);
 
