@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Multi-threaded net server implementation.
@@ -50,7 +49,8 @@ public class NetServer implements Server {
         while (isRunning) {
             clientSocket = serverSocket.accept();
 
-            System.out.println("Accepted connection request from client " + clientSocket.getInetAddress());
+            System.out.println("Accepted connection request from client " +
+                    clientSocket.getInetAddress());
             final ClientHandler clientHandler = new ClientHandler(clientSocket, serverData);
 
             executorService.execute(clientHandler);

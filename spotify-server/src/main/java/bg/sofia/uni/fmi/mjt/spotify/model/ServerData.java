@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
+ * Contains the data stored by the server. This is loaded at start-up.
+ *
  * @author angel.beshirov
  */
 public class ServerData {
@@ -20,8 +22,8 @@ public class ServerData {
     private final List<Playlist> playlists;
     private final List<Song> songs;
 
-    private Map<User, ClientHandler> clients;
-    private Map<Song, Integer> currentlyPlaying;
+    private final Map<User, ClientHandler> clients;
+    private final Map<Song, Integer> currentlyPlaying;
 
     public ServerData() {
         this.clients = new ConcurrentHashMap<>();

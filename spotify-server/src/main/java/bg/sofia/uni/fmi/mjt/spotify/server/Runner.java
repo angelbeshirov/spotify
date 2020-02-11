@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.server;
 
 import bg.sofia.uni.fmi.mjt.spotify.server.impl.NetServer;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;

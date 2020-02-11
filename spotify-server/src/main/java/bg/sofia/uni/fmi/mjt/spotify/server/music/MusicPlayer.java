@@ -4,7 +4,7 @@ import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,7 +17,8 @@ import java.util.Arrays;
  * @author angel.beshirov
  */
 public class MusicPlayer implements Runnable {
-    private static final String SENDING_SONG_DATA_ERROR_MSG = "Error while sending song data to client!";
+    private static final String SENDING_SONG_DATA_ERROR_MSG =
+            "Error while sending song data to client!";
     private static final String STOP = "STOP";
     private static final int BUFFER_SIZE = 2048;
     private final Song song;
@@ -27,7 +28,8 @@ public class MusicPlayer implements Runnable {
 
     private volatile boolean shouldPlay;
 
-    public MusicPlayer(Song song, ObjectOutputStream objectOutputStream, ServerData serverData, int frameSize) {
+    public MusicPlayer(Song song, ObjectOutputStream objectOutputStream,
+                       ServerData serverData, int frameSize) {
         this.song = song;
         this.objectOutputStream = objectOutputStream;
         this.serverData = serverData;

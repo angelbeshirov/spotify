@@ -1,7 +1,7 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.client;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.*;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
 import bg.sofia.uni.fmi.mjt.spotify.server.util.ExecutorUtil;
 import bg.sofia.uni.fmi.mjt.spotify.server.util.IOUtil;
@@ -60,9 +60,9 @@ public class CommandHandler {
                 return handleAddSongToPlaylist(args);
             case SEARCH:
                 return handleSearch(args);
+            default:
+                return Optional.empty();
         }
-
-        return Optional.empty();
     }
 
     public void close() {

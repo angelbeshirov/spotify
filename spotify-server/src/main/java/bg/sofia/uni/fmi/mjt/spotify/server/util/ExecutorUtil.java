@@ -10,10 +10,16 @@ import java.util.concurrent.TimeUnit;
  */
 public class ExecutorUtil {
 
+    private static final int TIMEOUT = 800;
+
+    private ExecutorUtil() {
+
+    }
+
     public static void shutdown(ExecutorService executorService) {
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+            if (!executorService.awaitTermination(TIMEOUT, TimeUnit.MILLISECONDS)) {
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {

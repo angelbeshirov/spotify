@@ -4,7 +4,7 @@ import bg.sofia.uni.fmi.mjt.spotify.model.Command;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -66,8 +66,10 @@ public class ClientHandler implements Runnable {
                     Optional<Command> internalCommand = getInternalCommand(data[0]);
 
                     internalCommand
-                            .map(x -> commandHandler.handleCommand(x, Arrays.copyOfRange(data, 1, data.length)))
-                            .orElseGet(() -> Optional.of(new Message(MessageType.TEXT, "Invalid command!".getBytes())))
+                            .map(x -> commandHandler.handleCommand(x,
+                                    Arrays.copyOfRange(data, 1, data.length)))
+                            .orElseGet(() -> Optional.of(new Message(MessageType.TEXT,
+                                    "Invalid command!".getBytes())))
                             .ifPresent(obj -> {
                                 try {
                                     objectOutputStream.writeObject(obj);

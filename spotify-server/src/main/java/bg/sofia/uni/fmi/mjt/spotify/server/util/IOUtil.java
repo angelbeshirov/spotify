@@ -3,7 +3,7 @@ package bg.sofia.uni.fmi.mjt.spotify.server.util;
 import bg.sofia.uni.fmi.mjt.spotify.model.Playlist;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
 import bg.sofia.uni.fmi.mjt.spotify.model.User;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.impl.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -25,7 +25,12 @@ public class IOUtil {
 
     private static final String SERIALIZING_ERROR = "Error while serializing!";
 
-    public static synchronized void serializeCollection(Path path, Collection<? extends Serializable> elements) {
+    private IOUtil() {
+
+    }
+
+    public static synchronized void serializeCollection(Path path,
+                                                        Collection<? extends Serializable> elements) {
         if (elements == null || elements.size() == 0) {
             return;
         }

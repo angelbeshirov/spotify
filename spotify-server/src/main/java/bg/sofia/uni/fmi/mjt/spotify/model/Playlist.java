@@ -51,7 +51,8 @@ public class Playlist implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("Playlist name: ").append(name).append(System.lineSeparator());
+        StringBuilder sb = new StringBuilder("Playlist name: ").append(name)
+                .append(System.lineSeparator());
         sb.append("Created by:").append(createdBy).append(System.lineSeparator());
 
         sb.append("Songs: ");
