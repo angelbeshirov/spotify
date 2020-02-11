@@ -17,6 +17,7 @@ public class Server {
     private static final int SERVER_PORT = 4444;
     private static final int MAX_THREADS = 15;
     private final ExecutorService executorService;
+    private final ServerSocket serverSocket;
     private final ServerData serverData;
 
     private volatile boolean isRunning;
@@ -24,33 +25,35 @@ public class Server {
     /**
      * Spotify server default initialization.
      */
-    public Server() {
+    public Server(ServerSocket serverSocket) {
         this.executorService = Executors.newFixedThreadPool(MAX_THREADS);
         this.serverData = new ServerData();
         this.isRunning = false;
+        this.serverSocket = serverSocket;
     }
 
     /**
      * Starts the server on the specified port.
      */
-    public void start() {
+    public void start() throws IOException {
         this.isRunning = true;
-        try (final ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
-            System.out.println("Server started and listening for connection requests!");
+        System.out.println("Server started and listening for connection requests!");
 
-            Socket clientSocket;
+        Socket clientSocket;
 
-            while (isRunning) {
-                clientSocket = serverSocket.accept();
+        while (isRunning) {
+            clientSocket = serverSocket.accept();
 
-                System.out.println("Accepted connection request from client " + clientSocket.getInetAddress());
-                final ClientHandler clientHandler = new ClientHandler(clientSocket, serverData);
+            System.out.println("Accepted connection request from client " + clientSocket.getInetAddress());
+            final ClientHandler clientHandler = new ClientHandler(clientSocket, serverData);
 
-                executorService.execute(clientHandler);
-            }
-        } catch (final IOException e) {
-            System.out.println(e.getMessage());
+            executorService.execute(clientHandler);
         }
+
+    }
+
+    public void stop() {
+        this.isRunning = false;
     }
 
 }

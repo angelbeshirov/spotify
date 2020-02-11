@@ -9,7 +9,7 @@ import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.Socket;
+import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,16 +21,22 @@ public class Receiver implements Runnable {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final String STOP = "STOP";
+    private static final String IO_ERROR_MSG = "IO Error while reading data from server!";
+    private static final String DESERIALIZING_ERROR_MSG =
+            "Error while deserializing message from server!";
+    private static final String ERROR_WHILE_PLAYING_SONG = "Error while playing song!";
 
-    private final Socket socket;
-    private LineListener lineListener;
+    private final ObjectInputStream objectInputStream;
+    private final ObjectOutputStream objectOutputStream;
+
     private SourceDataLine sourceDataLine;
 
     private volatile boolean isRunning;
     private volatile boolean isPlaying;
 
-    public Receiver(final Socket socket) {
-        this.socket = socket;
+    public Receiver(ObjectInputStream objectInputStream, ObjectOutputStream objectOutputStream) {
+        this.objectInputStream = objectInputStream;
+        this.objectOutputStream = objectOutputStream;
         this.isRunning = true;
         this.isPlaying = false;
         this.sourceDataLine = null;
@@ -38,9 +44,9 @@ public class Receiver implements Runnable {
 
     @Override
     public void run() {
-        try (ObjectInputStream obj = new ObjectInputStream(socket.getInputStream())) {
+        try {
             while (isRunning) {
-                Message message = (Message) obj.readObject();
+                Message message = (Message) objectInputStream.readObject();
                 if (MessageType.TEXT == message.getMessageType()) {
                     String textMessage = new String(message.getValue(), Charset.defaultCharset());
                     System.out.println("[" + FORMATTER.format(LocalDateTime.now()) + "] "
@@ -65,7 +71,6 @@ public class Receiver implements Runnable {
 
                     DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
                     sourceDataLine = (SourceDataLine) AudioSystem.getLine(info);
-                    sourceDataLine.addLineListener(lineListener);
                     sourceDataLine.open();
                     sourceDataLine.start();
                     isPlaying = true;
@@ -76,35 +81,34 @@ public class Receiver implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.out.println("IO Error while reading data from server!");
-            Logger.logError("IO Error while reading data from server!", e);
+            System.out.println(IO_ERROR_MSG);
+            Logger.logError(IO_ERROR_MSG, e);
         } catch (ClassNotFoundException e) {
-            System.out.println("Error while deserializing message from server!");
-            Logger.logError("Error while deserializing message from server!", e);
+            System.out.println(DESERIALIZING_ERROR_MSG);
+            Logger.logError(DESERIALIZING_ERROR_MSG, e);
         } catch (LineUnavailableException e) {
-            System.out.println("Error while playing song!");
-            Logger.logError("Error while playing song!", e);
+            System.out.println(ERROR_WHILE_PLAYING_SONG);
+            Logger.logError(ERROR_WHILE_PLAYING_SONG, e);
         }
     }
 
-    public void stopPlaying() {
+    public void stopPlaying() throws IOException {
         isPlaying = false;
         if (sourceDataLine != null) {
             sourceDataLine.stop();
             sourceDataLine = null;
+            objectOutputStream.writeObject(new Message(MessageType.TEXT,
+                    Sender.STOP.getBytes()));
+
         }
     }
 
-    public void stop() {
+    public void stop() throws IOException {
         if (isPlaying) {
             stopPlaying();
         }
 
         isRunning = false;
-    }
-
-    public void addListener(LineListener lineListener) {
-        this.lineListener = lineListener;
     }
 
     public boolean isPlaying() {

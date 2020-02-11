@@ -20,14 +20,14 @@ public class IOUtil {
 
     private static final String SERIALIZING_ERROR = "Error while serializing!";
 
-    public static synchronized void serializeCollection(Path path, Collection<? extends Serializable> elemenets) {
-        if (elemenets == null || elemenets.size() == 0) {
+    public static synchronized void serializeCollection(Path path, Collection<? extends Serializable> elements) {
+        if (elements == null || elements.size() == 0) {
             return;
         }
 
         // creates the file if it doesn't exist
         try (var oos = new ObjectOutputStream(Files.newOutputStream(path))) {
-            oos.writeObject(elemenets);
+            oos.writeObject(elements);
             oos.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);

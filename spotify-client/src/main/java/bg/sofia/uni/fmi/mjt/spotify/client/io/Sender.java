@@ -1,41 +1,35 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
-import bg.sofia.uni.fmi.mjt.spotify.client.music.CustomLineListener;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 
-import javax.sound.sampled.LineListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 
 /**
  * @author angel.beshirov
  */
 public class Sender implements Runnable {
+    public static final String STOP = "stop";
     private static final String DISCONNECT = "disconnect";
-    private static final String STOP = "stop";
     public static final String ERROR_SENDING_MESSAGE = "Error while sending message to server!";
 
     private final Receiver receiver;
-    private final Socket socket;
+    private final ObjectOutputStream writer;
     private boolean isRunning;
 
-    public Sender(final Socket socket, final Receiver receiver) {
-        this.socket = socket;
+    public Sender(final ObjectOutputStream writer, final Receiver receiver) {
+        this.writer = writer;
         this.receiver = receiver;
         this.isRunning = true;
     }
 
     @Override
     public void run() {
-        try (ObjectOutputStream writer = new ObjectOutputStream(socket.getOutputStream());
-             BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
-            LineListener lineListener = new CustomLineListener(writer);
-            receiver.addListener(lineListener);
+        try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
             while (isRunning) {
                 System.out.println("Enter a command to send to the server:");
                 String command = consoleReader.readLine();
@@ -47,6 +41,7 @@ public class Sender implements Runnable {
                     continue;
                 } else if (receiver.isPlaying() && STOP.equalsIgnoreCase(command)) {
                     receiver.stopPlaying();
+                    continue;
                 }
 
                 if (DISCONNECT.equalsIgnoreCase(command)) {

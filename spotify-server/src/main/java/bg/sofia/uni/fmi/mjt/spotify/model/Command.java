@@ -13,6 +13,5 @@ public enum Command {
     ADD_SONG_TO,
     SHOW_PLAYLIST,
     PLAY,
-    STOP,
-    SONG_FINISHED
+    STOP
 }

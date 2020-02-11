@@ -4,13 +4,11 @@ import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.*;
-import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,12 +44,9 @@ public class SenderTest {
     public void testSendingCommand() throws IOException, InterruptedException {
         System.setIn(new ByteArrayInputStream("sample command to send\n"
                 .getBytes()));
-        Socket socket = mock(Socket.class);
         Receiver receiver = mock(Receiver.class);
-        Sender sender = new Sender(socket, receiver);
-
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        when(socket.getOutputStream()).thenReturn(bs);
+        Sender sender = new Sender(new ObjectOutputStream(bs), receiver);
 
         executorService.execute(sender);
 
@@ -66,22 +61,17 @@ public class SenderTest {
 
     @Test(timeout = TIMEOUT)
     public void testStoppingPlayingMusic() throws IOException, InterruptedException {
-        Message stop = new Message(MessageType.TEXT, "stop".getBytes());
-
         System.setIn(new ByteArrayInputStream("stop\n".getBytes()));
-        Socket socket = mock(Socket.class);
         Receiver receiver = mock(Receiver.class);
-        Sender sender = new Sender(socket, receiver);
-
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        when(socket.getOutputStream()).thenReturn(bs);
+        Sender sender = new Sender(new ObjectOutputStream(bs), receiver);
+
         when(receiver.isPlaying()).thenReturn(true);
 
         executorService.execute(sender);
 
         Thread.sleep(MILLIS);
 
-        assertTrue(isSubArray(bs.toByteArray(), Util.serialize(stop)));
         Mockito.verify(receiver, times(1)).stopPlaying();
     }
 

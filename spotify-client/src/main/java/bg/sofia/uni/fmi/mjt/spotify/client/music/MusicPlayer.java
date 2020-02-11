@@ -5,9 +5,8 @@ import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
 
 import javax.sound.sampled.*;
-import java.io.*;
-import java.util.Arrays;
-import java.util.Objects;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
 /**
  * TODO listener or something.

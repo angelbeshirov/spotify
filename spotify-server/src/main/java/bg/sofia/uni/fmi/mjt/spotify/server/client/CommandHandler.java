@@ -20,8 +20,10 @@ import java.util.stream.Collectors;
  * TODO in properties the directory path
  * TODO multiple arguments can be concatenated
  * TODO somehow improve with play method
- * TODO figure out what rate to stream data so that song can end someone on the same time
- * TODO disconnect/tests/top N
+ * TODO figure out what rate to stream data so that song can end someone on the same time - resolved
+ * TODO disconnect/tests/top N - top N and disconnect - resolved
+ *
+ * TODO writing tests
  */
 public class CommandHandler {
     private static final int MUSIC_PLAY_DELAY_SECONDS = 1;
@@ -62,8 +64,6 @@ public class CommandHandler {
                 return handleAddSongToPlaylist(args);
             case SEARCH:
                 return handleSearch(args);
-            case SONG_FINISHED:
-                return handleSongFinish();
         }
 
         return Optional.empty();
@@ -165,8 +165,6 @@ public class CommandHandler {
             songInfo.setSampleRate(format.getSampleRate());
             songInfo.setSampleSizeInBits(format.getSampleSizeInBits());
 
-            System.out.println(songInfo);
-
             musicPlayer = new MusicPlayer(songToPlay,
                     clientHandler.getObjectOutputStream(),
                     serverData,
@@ -189,15 +187,6 @@ public class CommandHandler {
     private Optional<Message> handleStopPlaying() {
         if (musicPlayer != null) {
             musicPlayer.stop();
-            musicPlayer = null;
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<Message> handleSongFinish() {
-        if (musicPlayer != null) {
-            musicPlayer.removeFromPlaying();
             musicPlayer = null;
         }
 
@@ -277,7 +266,7 @@ public class CommandHandler {
                     "Invalid arguments for adding song to playlist!".getBytes()));
         } else if (this.user == null) {
             return Optional.of(new Message(MessageType.TEXT,
-                    "You have to log in before you can request info about playlist!".getBytes()));
+                    "You have to log in before you can add song to playlist!".getBytes()));
         }
 
         Playlist playlist = serverData.getPlaylist(new Playlist(args[0], this.user.getEmail()));

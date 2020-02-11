@@ -9,10 +9,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -61,9 +58,11 @@ public class ReceiverTest {
         Message message = new Message(MessageType.TEXT, "this is sample text message".getBytes());
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
-        when(socket.getInputStream()).thenReturn(byteArrayInputStream);
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
 
-        Receiver receiver = new Receiver(socket);
+        Receiver receiver = new Receiver(new ObjectInputStream(byteArrayInputStream),
+                new ObjectOutputStream(bs));
+
         executorService.execute(receiver);
         Thread.sleep(MILLIS);
         receiver.stop();
@@ -84,9 +83,10 @@ public class ReceiverTest {
         Message message = new Message(MessageType.SONG_INFO, Util.serialize(songInfo));
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
-        when(socket.getInputStream()).thenReturn(byteArrayInputStream);
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
 
-        Receiver receiver = new Receiver(socket);
+        Receiver receiver = new Receiver(new ObjectInputStream(byteArrayInputStream),
+                new ObjectOutputStream(bs));
         executorService.execute(receiver);
         Thread.sleep(MILLIS);
 
@@ -105,17 +105,20 @@ public class ReceiverTest {
         songInfo.setFrameSize(FRAME_SIZE);
         Message message = new Message(MessageType.SONG_INFO, Util.serialize(songInfo));
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
+        ByteArrayInputStream byteArrayInputStream =
+                new ByteArrayInputStream(Util.serialize(message));
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
 
-        Receiver receiver = new Receiver(socket);
+
+        Receiver receiver = new Receiver(new ObjectInputStream(byteArrayInputStream),
+                new ObjectOutputStream(bs));
         executorService.execute(receiver);
         Thread.sleep(MILLIS);
         receiver.stopPlaying();
 
         Assert.assertFalse(receiver.isPlaying());
     }
-
 
 
 }

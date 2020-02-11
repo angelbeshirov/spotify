@@ -13,6 +13,7 @@ public class IOUtilTest {
 
     @Test
     public void testCollectionSerialization() {
-        IOUtil.serializeCollection(Path.of("src\\test\\resources\\collection.bin"), Collections.singletonList(new Playlist("asd", "bsd")));
+        IOUtil.serializeCollection(Path.of("src\\test\\resources\\collection.bin"),
+                Collections.singletonList(new Playlist("asd", "bsd")));
     }
 }

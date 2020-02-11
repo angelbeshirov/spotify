@@ -4,10 +4,12 @@ import bg.sofia.uni.fmi.mjt.spotify.model.Command;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -18,6 +20,9 @@ import java.util.Optional;
  */
 public class ClientHandler implements Runnable {
     private static final String SPACE = " ";
+    private static final String CONNECTION_ERROR_MSG = "Error with the connection.";
+    private static final String DESERIALIZATION_ERROR_MSG = "Error with deserialization.";
+    private static final String CLIENT_ERROR_MSG = "Error while closing the client resources!";
 
     private final Socket socket;
     private final ServerData serverData;
@@ -40,7 +45,9 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
+            OutputStream os = socket.getOutputStream();
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            // output stream must be created before input stream
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
             commandHandler = new CommandHandler(this, serverData);
@@ -71,15 +78,18 @@ public class ClientHandler implements Runnable {
                 }
             }
         } catch (final IOException e) {
-            System.out.println("Error with the connection." + e.getMessage());
+            System.out.println(CONNECTION_ERROR_MSG);
+            Logger.logError(CONNECTION_ERROR_MSG, e);
         } catch (ClassNotFoundException e) {
-            System.out.println("Error with deserialization." + e.getMessage());
+            System.out.println(DESERIALIZATION_ERROR_MSG);
+            Logger.logError(DESERIALIZATION_ERROR_MSG, e);
         } finally {
             try {
                 objectOutputStream.close();
                 socket.close();
             } catch (IOException e) {
-                System.out.println("Error while closing the client resources!");
+                System.out.println(CLIENT_ERROR_MSG);
+                Logger.logError(CLIENT_ERROR_MSG, e);
             }
         }
     }
