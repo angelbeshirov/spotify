@@ -1,14 +1,13 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
 import bg.sofia.uni.fmi.mjt.spotify.client.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
 
 import javax.sound.sampled.*;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -24,6 +23,7 @@ public class Receiver implements Runnable {
     private static final String STOP = "STOP";
 
     private final Socket socket;
+    private LineListener lineListener;
     private SourceDataLine sourceDataLine;
 
     private volatile boolean isRunning;
@@ -51,11 +51,11 @@ public class Receiver implements Runnable {
                         stopPlaying();
                     }
                 } else if (MessageType.SONG_INFO == message.getMessageType()) {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(message.getValue()); // TODO migrate
-                    ObjectInput in = new ObjectInputStream(bis);
-                    SongInfo songInfo = (SongInfo) in.readObject();
+                    System.out.println("Playing...");
+                    SongInfo songInfo = (SongInfo) Util.deserialize(message.getValue());
 
-                    AudioFormat format = new AudioFormat(new AudioFormat.Encoding(songInfo.getEncoding()),
+                    AudioFormat format = new AudioFormat(new AudioFormat.Encoding(
+                            songInfo.getEncoding()),
                             songInfo.getSampleRate(),
                             songInfo.getSampleSizeInBits(),
                             songInfo.getChannels(),
@@ -65,6 +65,7 @@ public class Receiver implements Runnable {
 
                     DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
                     sourceDataLine = (SourceDataLine) AudioSystem.getLine(info);
+                    sourceDataLine.addLineListener(lineListener);
                     sourceDataLine.open();
                     sourceDataLine.start();
                     isPlaying = true;
@@ -75,16 +76,13 @@ public class Receiver implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.out.println("IO Error while reading data from server!"
-                    + e.getMessage());
+            System.out.println("IO Error while reading data from server!");
             Logger.logError("IO Error while reading data from server!", e);
         } catch (ClassNotFoundException e) {
-            System.out.println("Error while deserializing message from server!"
-                    + e.getMessage());
+            System.out.println("Error while deserializing message from server!");
             Logger.logError("Error while deserializing message from server!", e);
         } catch (LineUnavailableException e) {
-            System.out.println("Error while playing song! "
-                    + e.getMessage());
+            System.out.println("Error while playing song!");
             Logger.logError("Error while playing song!", e);
         }
     }
@@ -103,6 +101,10 @@ public class Receiver implements Runnable {
         }
 
         isRunning = false;
+    }
+
+    public void addListener(LineListener lineListener) {
+        this.lineListener = lineListener;
     }
 
     public boolean isPlaying() {

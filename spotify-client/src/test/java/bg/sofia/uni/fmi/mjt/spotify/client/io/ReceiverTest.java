@@ -1,6 +1,6 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
-import bg.sofia.uni.fmi.mjt.spotify.client.music.MusicPlayer;
+import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import bg.sofia.uni.fmi.mjt.spotify.model.SongInfo;
@@ -9,7 +9,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,9 +58,9 @@ public class ReceiverTest {
 
     @Test(timeout = TIMEOUT)
     public void testTextReading() throws IOException, InterruptedException {
-        Message message = new Message(MessageType.TEXT, "this is some sample text message".getBytes());
+        Message message = new Message(MessageType.TEXT, "this is sample text message".getBytes());
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(convertToBytes(message));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
 
         Receiver receiver = new Receiver(socket);
@@ -65,7 +68,7 @@ public class ReceiverTest {
         Thread.sleep(MILLIS);
         receiver.stop();
 
-        assertTrue(outContent.toString().contains("this is some sample text message"));
+        assertTrue(outContent.toString().contains("this is sample text message"));
     }
 
     @Test(timeout = TIMEOUT)
@@ -78,9 +81,9 @@ public class ReceiverTest {
         songInfo.setSampleRate(SAMPLE_RATE);
         songInfo.setSampleSizeInBits(SAMPLE_SIZE_IN_BITS);
         songInfo.setFrameSize(FRAME_SIZE);
-        Message message = new Message(MessageType.SONG_INFO, convertToBytes(songInfo));
+        Message message = new Message(MessageType.SONG_INFO, Util.serialize(songInfo));
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(convertToBytes(message));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
 
         Receiver receiver = new Receiver(socket);
@@ -100,9 +103,9 @@ public class ReceiverTest {
         songInfo.setSampleRate(SAMPLE_RATE);
         songInfo.setSampleSizeInBits(SAMPLE_SIZE_IN_BITS);
         songInfo.setFrameSize(FRAME_SIZE);
-        Message message = new Message(MessageType.SONG_INFO, convertToBytes(songInfo));
+        Message message = new Message(MessageType.SONG_INFO, Util.serialize(songInfo));
 
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(convertToBytes(message));
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Util.serialize(message));
         when(socket.getInputStream()).thenReturn(byteArrayInputStream);
 
         Receiver receiver = new Receiver(socket);
@@ -113,15 +116,6 @@ public class ReceiverTest {
         Assert.assertFalse(receiver.isPlaying());
     }
 
-    private <T extends Serializable> byte[] convertToBytes(T serializable) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (ObjectOutputStream os = new ObjectOutputStream(bos)) {
-            os.writeObject(serializable);
-        } catch (IOException e) {
-            System.out.println("Error while serializing!" + e.getMessage());
-        }
 
-        return bos.toByteArray();
-    }
 
 }

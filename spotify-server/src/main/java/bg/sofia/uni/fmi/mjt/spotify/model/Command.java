@@ -1,5 +1,8 @@
 package bg.sofia.uni.fmi.mjt.spotify.model;
 
+/**
+ * Contains all commands to which the server can respond.
+ */
 public enum Command {
     REGISTER,
     LOGIN,
@@ -10,5 +13,6 @@ public enum Command {
     ADD_SONG_TO,
     SHOW_PLAYLIST,
     PLAY,
-    STOP
+    STOP,
+    SONG_FINISHED
 }

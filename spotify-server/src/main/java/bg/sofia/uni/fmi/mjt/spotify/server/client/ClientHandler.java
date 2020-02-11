@@ -1,14 +1,16 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.client;
 
-import bg.sofia.uni.fmi.mjt.spotify.model.*;
-import com.google.gson.Gson;
+import bg.sofia.uni.fmi.mjt.spotify.model.Command;
+import bg.sofia.uni.fmi.mjt.spotify.model.Message;
+import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
+import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -16,31 +18,18 @@ import java.util.Optional;
  */
 public class ClientHandler implements Runnable {
     private static final String SPACE = " ";
-    private final Socket socket;
-    private CommandHandler commandHandler;
-    private Map<User, ClientHandler> clients;
-    private Map<Song, Integer> currentlyPlaying;
-    private List<Song> songs;
-    private List<Playlist> playlists;
-    private List<User> registeredUsers;
-    private ObjectOutputStream objectOutputStream;
 
+    private final Socket socket;
+    private final ServerData serverData;
+
+    private ObjectOutputStream objectOutputStream;
+    private CommandHandler commandHandler;
 
     private volatile boolean isRunning;
 
-    // TODO group all 3 lists into an object
-    public ClientHandler(Socket socket,
-                         Map<User, ClientHandler> clients,
-                         List<User> registeredUsers,
-                         List<Playlist> playlists,
-                         List<Song> songs,
-                         Map<Song, Integer> currentlyPlaying) {
+    public ClientHandler(Socket socket, ServerData serverData) {
         this.socket = socket;
-        this.clients = clients;
-        this.registeredUsers = registeredUsers;
-        this.playlists = playlists;
-        this.songs = songs;
-        this.currentlyPlaying = currentlyPlaying;
+        this.serverData = serverData;
         this.isRunning = true;
     }
 
@@ -51,15 +40,16 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            this.objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
-            this.commandHandler = new CommandHandler(this, clients, registeredUsers, playlists, songs, currentlyPlaying);
+            commandHandler = new CommandHandler(this, serverData);
 
-
-            Message message = (Message) objectInputStream.readObject();
+            Message message;
 
             while (isRunning) {
+                message = (Message) objectInputStream.readObject();
+
                 if (message != null && message.getMessageType() == MessageType.TEXT) {
                     String command = new String(message.getValue(), Charset.defaultCharset());
 
@@ -78,8 +68,6 @@ public class ClientHandler implements Runnable {
                                     throw new RuntimeException(e);
                                 }
                             });
-
-                    message = (Message) objectInputStream.readObject();
                 }
             }
         } catch (final IOException e) {
@@ -88,9 +76,10 @@ public class ClientHandler implements Runnable {
             System.out.println("Error with deserialization." + e.getMessage());
         } finally {
             try {
-                socket.close(); // TODO close streams
+                objectOutputStream.close();
+                socket.close();
             } catch (IOException e) {
-                System.out.println("Error while closing the client socket!");
+                System.out.println("Error while closing the client resources!");
             }
         }
     }
@@ -104,5 +93,9 @@ public class ClientHandler implements Runnable {
         }
 
         return Optional.empty();
+    }
+
+    public void stop() {
+        this.isRunning = false;
     }
 }

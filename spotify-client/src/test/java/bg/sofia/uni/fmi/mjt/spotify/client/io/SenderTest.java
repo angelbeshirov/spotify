@@ -1,6 +1,10 @@
 package bg.sofia.uni.fmi.mjt.spotify.client.io;
 
+import bg.sofia.uni.fmi.mjt.spotify.client.util.Util;
+import bg.sofia.uni.fmi.mjt.spotify.model.Message;
+import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -18,8 +22,8 @@ import static org.mockito.Mockito.*;
  */
 public class SenderTest {
 
-    public static final int MILLIS = 1000;
-    public static final int TIMEOUT = 5000;
+    private static final int MILLIS = 1000;
+    private static final int TIMEOUT = 5000;
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
@@ -40,7 +44,8 @@ public class SenderTest {
 
     @Test(timeout = TIMEOUT)
     public void testSendingCommand() throws IOException, InterruptedException {
-        System.setIn(new ByteArrayInputStream("sample command to send\n disconnect\n".getBytes()));
+        System.setIn(new ByteArrayInputStream("sample command to send\n"
+                .getBytes()));
         Socket socket = mock(Socket.class);
         Receiver receiver = mock(Receiver.class);
         Sender sender = new Sender(socket, receiver);
@@ -51,14 +56,19 @@ public class SenderTest {
         executorService.execute(sender);
 
         Thread.sleep(MILLIS);
+        Message sampleCommand = new Message(MessageType.TEXT, "sample command to send"
+                .getBytes());
 
-        assertTrue(bs.toString().contains("sample command to send"));
-        assertTrue(bs.toString().contains("disconnect"));
+        byte[] arr = bs.toByteArray();
+
+        assertTrue(isSubArray(arr, Util.serialize(sampleCommand)));
     }
 
     @Test(timeout = TIMEOUT)
     public void testStoppingPlayingMusic() throws IOException, InterruptedException {
-        System.setIn(new ByteArrayInputStream("stop\n disconnect\n".getBytes()));
+        Message stop = new Message(MessageType.TEXT, "stop".getBytes());
+
+        System.setIn(new ByteArrayInputStream("stop\n".getBytes()));
         Socket socket = mock(Socket.class);
         Receiver receiver = mock(Receiver.class);
         Sender sender = new Sender(socket, receiver);
@@ -71,21 +81,28 @@ public class SenderTest {
 
         Thread.sleep(MILLIS);
 
-//        ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(convertToBytes()))
-//        bs.toByteArray();
-//        assertTrue(bs.toString().contains("stop"));
-//        assertTrue(bs.toString().contains("disconnect"));
+        assertTrue(isSubArray(bs.toByteArray(), Util.serialize(stop)));
         Mockito.verify(receiver, times(1)).stopPlaying();
     }
 
-    private <T extends Serializable> byte[] convertToBytes(T serializable) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (ObjectOutputStream os = new ObjectOutputStream(bos)) {
-            os.writeObject(serializable);
-        } catch (IOException e) {
-            System.out.println("Error while serializing!" + e.getMessage());
-        }
+    static boolean isSubArray(byte[] arr, byte[] subArr) {
+        int n = arr.length;
+        int m = subArr.length;
+        int i = 0, j = 0;
 
-        return bos.toByteArray();
+        while (i < n && j < m) {
+            if (arr[i] == subArr[j]) {
+
+                i++;
+                j++;
+
+                if (j == m)
+                    return true;
+            } else {
+                i = i - j + 1;
+                j = 0;
+            }
+        }
+        return false;
     }
 }

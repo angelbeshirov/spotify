@@ -9,8 +9,8 @@ import java.io.Serializable;
  */
 public class Message implements Serializable {
     private static final long serialVersionUID = -8330694407465678518L;
-    private MessageType messageType;
-    private byte[] value;
+    private final MessageType messageType;
+    private final byte[] value;
 
     public Message(MessageType messageType, byte[] value) {
         this.messageType = messageType;

@@ -2,55 +2,64 @@ package bg.sofia.uni.fmi.mjt.spotify.server.music;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.Message;
 import bg.sofia.uni.fmi.mjt.spotify.model.MessageType;
-import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
+import bg.sofia.uni.fmi.mjt.spotify.model.ServerData;
 import bg.sofia.uni.fmi.mjt.spotify.model.Song;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 /**
+ * Music player which sends song data in a separate thread.
+ *
  * @author angel.beshirov
  */
 public class MusicPlayer implements Runnable {
-    public static final int BUFFER_SIZE = 2048;
-    public static final String STOP = "STOP";
+    private static final String SENDING_SONG_DATA_ERROR_MSG = "Error while sending song data to client!";
+    private static final String STOP = "STOP";
+    private static final int BUFFER_SIZE = 2048;
     private final Song song;
     private final ObjectOutputStream objectOutputStream;
+    private final ServerData serverData;
     private final int frameSize;
 
     private volatile boolean shouldPlay;
 
-    public MusicPlayer(Song song, ObjectOutputStream objectOutputStream, int frameSize) {
+    public MusicPlayer(Song song, ObjectOutputStream objectOutputStream, ServerData serverData, int frameSize) {
         this.song = song;
-        this.shouldPlay = true;
         this.objectOutputStream = objectOutputStream;
+        this.serverData = serverData;
         this.frameSize = frameSize;
-    }
-
-    public Song getSong() {
-        return song;
+        this.shouldPlay = true;
     }
 
     @Override
     public void run() {
-        System.out.println(song.getPath().toFile().length());
-        try (FileInputStream fileInputStream = new FileInputStream(song.getPath().toFile())) {
-
+        try (FileInputStream fileInputStream = new FileInputStream(song.getFile())) {
+            serverData.addToCurrentlyPlaying(song);
             byte[] buff = new byte[BUFFER_SIZE];
             int k;
             while ((k = fileInputStream.read(buff)) > 0 && shouldPlay) {
                 int mod = k % frameSize;
-                objectOutputStream.writeObject(new Message(MessageType.SONG_PAYLOAD, Arrays.copyOfRange(buff, 0, k - mod)));
+                objectOutputStream.writeObject(new Message(MessageType.SONG_PAYLOAD,
+                        Arrays.copyOfRange(buff, 0, k - mod)));
             }
             objectOutputStream.writeObject(new Message(MessageType.TEXT, STOP.getBytes()));
             objectOutputStream.flush();
-            System.out.println("Finishing song playing!");
         } catch (IOException e) {
-            Logger.logError("Error while sending song data to client!");
+            System.out.println(SENDING_SONG_DATA_ERROR_MSG);
+            Logger.logError(SENDING_SONG_DATA_ERROR_MSG, e);
         }
     }
 
     public void stop() {
         this.shouldPlay = false;
+        removeFromPlaying();
+    }
+
+    public void removeFromPlaying() {
+        serverData.removeCurrentlyPlaying(song);
     }
 }

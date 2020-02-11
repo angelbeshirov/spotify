@@ -1,26 +1,32 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.io;
 
 import bg.sofia.uni.fmi.mjt.spotify.model.Playlist;
+import bg.sofia.uni.fmi.mjt.spotify.model.Song;
 import bg.sofia.uni.fmi.mjt.spotify.model.User;
+import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 /**
- * TODO improve
- *
  * @author angel.beshirov
  */
 public class IOUtil {
 
-    public static synchronized void writeToFile(Path file, Collection<? extends Serializable> elemenets) {
+    private static final String SERIALIZING_ERROR = "Error while serializing!";
+
+    public static synchronized void serializeCollection(Path path, Collection<? extends Serializable> elemenets) {
         if (elemenets == null || elemenets.size() == 0) {
             return;
         }
 
-        try (var oos = new ObjectOutputStream(Files.newOutputStream(file))) {
+        // creates the file if it doesn't exist
+        try (var oos = new ObjectOutputStream(Files.newOutputStream(path))) {
             oos.writeObject(elemenets);
             oos.flush();
         } catch (IOException e) {
@@ -28,39 +34,79 @@ public class IOUtil {
         }
     }
 
-    public static synchronized void writeToFile(Path file, String data) {
-        try (var oos = new OutputStreamWriter(Files.newOutputStream(file))) {
-            oos.write(data);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // TODO make sure file is created;
-    public static synchronized List<User> deserializeUsers(Path file) {
+    public static List<User> deserializeUsers(Path path) {
         List<User> users = new ArrayList<>();
-        try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
-            users = (List<User>) ois.readObject();
-        } catch (EOFException e) {
-            System.out.println("No registered users!");
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        if (!path.toFile().exists()) {
+            return users;
         }
 
-        return users;
+        return deserialize(path)
+                .map(object -> (List<User>) object)
+                .orElse(users);
     }
 
-    public static synchronized List<Playlist> deserializePlaylists(Path file) {
+    public static List<Playlist> deserializePlaylists(Path path) {
         List<Playlist> playlists = new ArrayList<>();
-        try (var ois = new ObjectInputStream(Files.newInputStream(file))) {
-            playlists = (List<Playlist>) ois.readObject();
+        if (!path.toFile().exists()) {
+            return playlists;
+        }
+
+        return deserialize(path)
+                .map(object -> (List<Playlist>) object)
+                .orElse(playlists);
+    }
+
+    public static List<Song> retrieveSongs(Path directory) {
+        File file = directory.toFile();
+        List<Song> songs = new ArrayList<>();
+        if (file.isDirectory()) {
+            songs.addAll(iterateSongs(file.listFiles()));
+        }
+
+        return songs;
+    }
+
+    private static List<Song> iterateSongs(File[] files) {
+        List<Song> songs = new ArrayList<>();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    iterateSongs(file.listFiles());
+                } else {
+                    songs.add(new Song(file.getName(), file));
+                }
+            }
+        }
+
+        return songs;
+    }
+
+    public static <T extends Serializable> byte[] serialize(T serializable) {
+        byte[] result = null;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream os = new ObjectOutputStream(bos)) {
+            os.writeObject(serializable);
+            result = bos.toByteArray();
+        } catch (IOException e) {
+            System.out.println(SERIALIZING_ERROR);
+            Logger.logError(SERIALIZING_ERROR, e);
+        }
+
+        return result;
+    }
+
+    // does this need to be synchronized?
+    private static synchronized Optional<Object> deserialize(Path path) {
+        Object result = null;
+        try (var ois = new ObjectInputStream(Files.newInputStream(path))) {
+            result = ois.readObject();
         } catch (EOFException e) {
-            // TODO ???
             System.out.println("No playlists!");
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        return playlists;
+        return Optional.ofNullable(result);
     }
 }

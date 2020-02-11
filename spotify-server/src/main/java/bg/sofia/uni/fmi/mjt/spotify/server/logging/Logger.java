@@ -1,35 +1,42 @@
 package bg.sofia.uni.fmi.mjt.spotify.server.logging;
 
-import bg.sofia.uni.fmi.mjt.spotify.server.io.IOUtil;
-
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
- * TODO think about synchronizing this cuz it will be used by multiple threads
+ * Custom logger.
  *
  * @author angel.beshirov
  */
 public class Logger {
-    private final static String LOG_PATH = "src\\main\\resources\\spotify.log";
-    public static final String ERROR = "[ERROR] ";
-    public static final String INFO = "[INFO] ";
-    public static final String WARN = "[WARN] ";
+    private final static String LOG_PATH = "src\\main\\resources\\spotify-server.log";
+    private static final String ERROR = "[ERROR] ";
+    private static final String INFO = "[INFO] ";
 
-    private final String name;
-
-    public Logger(String name) {
-        this.name = name;
+    static {
+        File f = new File(LOG_PATH);
+        try {
+            f.createNewFile();
+        } catch (IOException e) {
+            System.out.println("IO Exception while trying to initialize logger!" + e.getMessage());
+        }
     }
 
-    public static void logError(String message) {
-        IOUtil.writeToFile(Path.of(LOG_PATH), ERROR + message);
-    }
-
-    public static void logWarning(String message) {
-        IOUtil.writeToFile(Path.of(LOG_PATH), WARN + message);
+    public static void logError(String message, Throwable throwable) {
+        writeToFile(ERROR + message + throwable.getMessage());
     }
 
     public static void logInfo(String message) {
-        IOUtil.writeToFile(Path.of(LOG_PATH), INFO + message);
+        writeToFile(INFO + message);
+    }
+
+    private static synchronized void writeToFile(String message) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(LOG_PATH, true))) {
+            out.println(message);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

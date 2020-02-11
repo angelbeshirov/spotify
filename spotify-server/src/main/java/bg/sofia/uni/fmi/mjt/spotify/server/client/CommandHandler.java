@@ -4,16 +4,12 @@ import bg.sofia.uni.fmi.mjt.spotify.model.*;
 import bg.sofia.uni.fmi.mjt.spotify.server.io.IOUtil;
 import bg.sofia.uni.fmi.mjt.spotify.server.logging.Logger;
 import bg.sofia.uni.fmi.mjt.spotify.server.music.MusicPlayer;
-import com.google.gson.Gson;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -22,32 +18,26 @@ import java.util.stream.Collectors;
 /**
  * @author angel.beshirov
  * TODO in properties the directory path
+ * TODO multiple arguments can be concatenated
+ * TODO somehow improve with play method
+ * TODO figure out what rate to stream data so that song can end someone on the same time
+ * TODO disconnect/tests/top N
  */
 public class CommandHandler {
-    private static final Gson GSON = new Gson();
-    private static final String USERS_FILE_NAME = "src\\main\\resources\\users.bin";
-    private static final String PLAYLISTS_FILE_NAME = "src\\main\\resources\\playlists.bin";
-    private static final int MUSIC_PLAY_DELAY = 1;
-    final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1); // TODO this should come in the constructor maybe
+    private static final int MUSIC_PLAY_DELAY_SECONDS = 1;
 
-    private Map<User, ClientHandler> loggedInUsers;
+    private final ScheduledThreadPoolExecutor executor;
     private final ClientHandler clientHandler;
+    private final ServerData serverData;
     private User user;
-    private final List<User> registeredUsers;
-    private final List<Playlist> playlists;
-    private final List<Song> songs;
-    private final Map<Song, Integer> currentlyPlaying;
 
     private MusicPlayer musicPlayer;
 
-    public CommandHandler(ClientHandler clientHandler, Map<User, ClientHandler> loggedInUsers, List<User> registeredUsers, List<Playlist> playlists, List<Song> songs, Map<Song, Integer> currentlyPlaying) {
+    public CommandHandler(ClientHandler clientHandler, ServerData serverData) {
         this.clientHandler = clientHandler;
-        this.loggedInUsers = loggedInUsers;
-        this.registeredUsers = registeredUsers;
-        this.playlists = playlists;
-        this.songs = songs;
-        this.musicPlayer = null; // TODO somehow improve with play method
-        this.currentlyPlaying = currentlyPlaying;
+        this.serverData = serverData;
+        this.executor = new ScheduledThreadPoolExecutor(1);
+        this.musicPlayer = null;
     }
 
     public Optional<Message> handleCommand(Command command, String... args) {
@@ -69,9 +59,11 @@ public class CommandHandler {
             case SHOW_PLAYLIST:
                 return handleShowPlaylist(args);
             case ADD_SONG_TO:
-                return handleAddSongTo(args);
+                return handleAddSongToPlaylist(args);
             case SEARCH:
                 return handleSearch(args);
+            case SONG_FINISHED:
+                return handleSongFinish();
         }
 
         return Optional.empty();
@@ -79,58 +71,64 @@ public class CommandHandler {
 
     private Optional<Message> handleRegister(String... args) {
         if (args == null || args.length != 2) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments count for register!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments count for register!".getBytes()));
         } else if (this.user != null) {
-            return Optional.of(new Message(MessageType.TEXT, "You are already logged in!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You are already logged in!".getBytes()));
         }
 
         String email = args[0];
         String password = args[1];
 
         if (email == null || password == null) {
-            return Optional.of(new Message(MessageType.TEXT, "Email or password is invalid!".getBytes())); // TODO possibly improve this error handling
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Email or password is invalid!".getBytes()));
         }
 
         User user = new User(email, password);
-        if (registeredUsers.contains(user)) {
-            return Optional.of(new Message(MessageType.TEXT, "User with this email address already exists!".getBytes()));
+        if (serverData.getUser(user) != null) {
+            return Optional.of(new Message(MessageType.TEXT,
+                    "User with this email address already exists!".getBytes()));
         }
 
-        registeredUsers.add(user);
-        IOUtil.writeToFile(Path.of(USERS_FILE_NAME), registeredUsers);
+        serverData.addUser(user);
+        serverData.saveUsers();
 
-        return Optional.of(new Message(MessageType.TEXT, "Registration was successful".getBytes()));
+        return Optional.of(new Message(MessageType.TEXT,
+                "Registration was successful".getBytes()));
     }
 
     private Optional<Message> handleLogin(String... args) {
         if (args == null || args.length != 2) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments for login!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments for login!".getBytes()));
         } else if (this.user != null) {
-            return Optional.of(new Message(MessageType.TEXT, "You are already logged in!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You are already logged in!".getBytes()));
         }
 
         User user = new User(args[0], args[1]);
-        int index = registeredUsers.indexOf(user);
+        User savedUser = serverData.getUser(user);
 
-        if (index == -1) {
-            return Optional.of(new Message(MessageType.TEXT, "User with this email does not exist!".getBytes()));
+        if (savedUser == null) {
+            return Optional.of(new Message(MessageType.TEXT,
+                    "User with this email does not exist!".getBytes()));
         }
 
-        User registeredUser = registeredUsers.get(index);
-
-        if (!registeredUser.getPassword().equals(user.getPassword())) {
+        if (!Objects.equals(savedUser.getPassword(), user.getPassword())) {
             return Optional.of(new Message(MessageType.TEXT, "Wrong password".getBytes()));
         }
 
-        this.user = registeredUser;
-        loggedInUsers.put(this.user, clientHandler);
+        this.user = savedUser;
+        serverData.addLoggedInUser(this.user, clientHandler);
 
         return Optional.of(new Message(MessageType.TEXT, "Successfully logged in!".getBytes()));
     }
 
     private Optional<Message> handleDisconnect() {
         if (user != null) {
-            loggedInUsers.remove(user);
+            serverData.logOut(user);
         }
 
         return Optional.of(new Message(MessageType.TEXT, "Successfully disconnected!".getBytes()));
@@ -138,27 +136,25 @@ public class CommandHandler {
 
     private Optional<Message> handleSongPlaying(String... args) {
         if (args == null || args.length != 1) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments for song playing!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments for song playing!".getBytes()));
         } else if (this.user == null) {
-            return Optional.of(new Message(MessageType.TEXT, "You have to first log in before you can listen to songs!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You have to first log in before you can listen to songs!".getBytes()));
         }
 
         String songName = args[0];
-        Song songToPlay = null;
-        for (Song song : this.songs) {
-            if (song.getSongName().equalsIgnoreCase(songName)) {
-                songToPlay = song;
-            }
-        }
+        Song songToPlay = serverData.getSongByName(songName);
 
         if (songToPlay == null) {
-            return Optional.of(new Message(MessageType.TEXT, "There is no song with this name!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "There is no song with this name!".getBytes()));
         }
 
 
         SongInfo songInfo;
         AudioFormat format;
-        try (AudioInputStream stream = AudioSystem.getAudioInputStream(songToPlay.getPath().toFile())) {
+        try (AudioInputStream stream = AudioSystem.getAudioInputStream(songToPlay.getFile())) {
             format = stream.getFormat();
             songInfo = new SongInfo();
             songInfo.setBigEndian(format.isBigEndian());
@@ -171,36 +167,38 @@ public class CommandHandler {
 
             System.out.println(songInfo);
 
-            musicPlayer = new MusicPlayer(songToPlay, clientHandler.getObjectOutputStream(), format.getFrameSize());
-            currentlyPlaying.put(songToPlay, currentlyPlaying.getOrDefault(songToPlay, 0) + 1);
+            musicPlayer = new MusicPlayer(songToPlay,
+                    clientHandler.getObjectOutputStream(),
+                    serverData,
+                    format.getFrameSize());
 
-            executor.schedule(musicPlayer, MUSIC_PLAY_DELAY, TimeUnit.SECONDS);
+            executor.schedule(musicPlayer, MUSIC_PLAY_DELAY_SECONDS, TimeUnit.SECONDS);
         } catch (IOException e) {
-            Logger.logError("IOException. " + e.getMessage());
-            return Optional.of(new Message(MessageType.TEXT, "Internal server error!".getBytes()));
+            Logger.logError("IOException. ", e);
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Internal server error!".getBytes()));
         } catch (UnsupportedAudioFileException e) {
-            Logger.logError("Unsupported format exception. " + e.getMessage());
-            return Optional.of(new Message(MessageType.TEXT, "Unsupported format!".getBytes()));
-        }
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (ObjectOutputStream os = new ObjectOutputStream(bos)) {
-            os.writeObject(songInfo);
-        } catch (IOException e) {
-            e.printStackTrace();
+            Logger.logError("Unsupported format exception. ", e);
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Unsupported format!".getBytes()));
         }
 
-        return Optional.of(new Message(MessageType.SONG_INFO, bos.toByteArray()));
+        return Optional.of(new Message(MessageType.SONG_INFO, IOUtil.serialize(songInfo)));
     }
 
     private Optional<Message> handleStopPlaying() {
-        if (this.musicPlayer != null) {
-            Song song = this.musicPlayer.getSong();
-            if (song != null && Objects.compare(currentlyPlaying.get(song), 0, Comparator.naturalOrder()) > 0) {
-                currentlyPlaying.put(this.musicPlayer.getSong(),
-                        currentlyPlaying.get(song) - 1);
-            }
+        if (musicPlayer != null) {
+            musicPlayer.stop();
+            musicPlayer = null;
+        }
 
-            this.musicPlayer.stop();
+        return Optional.empty();
+    }
+
+    private Optional<Message> handleSongFinish() {
+        if (musicPlayer != null) {
+            musicPlayer.removeFromPlaying();
+            musicPlayer = null;
         }
 
         return Optional.empty();
@@ -208,19 +206,23 @@ public class CommandHandler {
 
     private Optional<Message> handleTopSongs(String... args) {
         if (args == null || args.length != 1) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments for generating top playing songs!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments for generating top songs!".getBytes()));
         } else if (this.user == null) {
-            return Optional.of(new Message(MessageType.TEXT, "You have to log in before you can get information about top playing songs!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You have to log in before you can get information about top songs!".getBytes()));
         }
 
-        List<Map.Entry<Song, Integer>> sorted = currentlyPlaying.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(10)
-                .collect(Collectors.toList());
+        List<Map.Entry<Song, Integer>> sorted =
+                serverData.getTopNCurrentlyPlayingSorted(Integer.parseInt(args[0]));
 
         StringBuilder sb = new StringBuilder("Top playing songs are: ");
         for (Map.Entry<Song, Integer> entry : sorted) {
-            sb.append(entry.getKey().getSongName()).append(": ").append(entry.getValue()).append(System.lineSeparator());
+            sb.append(entry.getKey()
+                    .getSongName())
+                    .append(": ")
+                    .append(entry.getValue())
+                    .append(System.lineSeparator());
         }
 
         return Optional.of(new Message(MessageType.TEXT, sb.toString().getBytes()));
@@ -228,67 +230,92 @@ public class CommandHandler {
 
     private Optional<Message> handleCreatePlaylist(String... args) {
         if (args == null || args.length != 1) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments for creating playlist!".getBytes()));
         } else if (this.user == null) {
-            return Optional.of(new Message(MessageType.TEXT, "You have to log in before you can create playlists!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You have to log in before you can create playlists!".getBytes()));
         }
 
-        playlists.add(new Playlist(args[0], user.getEmail())); // TODO multiple arguments can be concatenated
+        Playlist playlist = new Playlist(args[0], user.getEmail());
+        Playlist savedPlaylist = serverData.getPlaylist(playlist);
 
-        IOUtil.writeToFile(Path.of(PLAYLISTS_FILE_NAME), playlists);
-        return Optional.of(new Message(MessageType.TEXT, "Playlist was created successfully!".getBytes()));
+        if (savedPlaylist == null) {
+            serverData.addPlaylist(playlist);
+            serverData.savePlaylists();
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Playlist was created successfully!".getBytes()));
+        } else {
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Playlist with this name already exists!".getBytes()));
+        }
     }
 
     private Optional<Message> handleShowPlaylist(String... args) {
         if (args == null || args.length != 1) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments for creating playlist!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments for creating playlist!".getBytes()));
         } else if (this.user == null) {
-            return Optional.of(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You have to log in before you can request info about playlist!".getBytes()));
         }
 
-        int index = playlists.indexOf(new Playlist(args[0], this.user.getEmail()));
-        if (index == -1) {
-            return Optional.of(new Message(MessageType.TEXT, ("You don't have playlist with name " + args[0]).getBytes()));
+        Playlist playlistToCheck = new Playlist(args[0], this.user.getEmail());
+
+        Playlist playlist = serverData.getPlaylist(playlistToCheck);
+        if (playlist == null) {
+            return Optional.of(new Message(MessageType.TEXT,
+                    ("You don't have playlist with name " + args[0]).getBytes()));
         }
 
-        // TODO playlist should be uniquely identified by name + email
-        return Optional.of(new Message(MessageType.TEXT, playlists.get(index).toString().getBytes()));
+        return Optional.of(new Message(MessageType.TEXT, playlist.toString().getBytes()));
     }
 
-    private Optional<Message> handleAddSongTo(String... args) {
+    private Optional<Message> handleAddSongToPlaylist(String... args) {
         if (args == null || args.length != 2) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments for adding song to playlist!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments for adding song to playlist!".getBytes()));
         } else if (this.user == null) {
-            return Optional.of(new Message(MessageType.TEXT, "You have to log in before you can request info about playlist!".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "You have to log in before you can request info about playlist!".getBytes()));
         }
 
-        int index1 = playlists.indexOf(new Playlist(args[0], this.user.getEmail()));
-        if (index1 == -1) {
-            return Optional.of(new Message(MessageType.TEXT, ("You don't have playlist with name " + args[0]).getBytes()));
+        Playlist playlist = serverData.getPlaylist(new Playlist(args[0], this.user.getEmail()));
+        if (playlist == null) {
+            return Optional.of(new Message(MessageType.TEXT,
+                    ("You don't have playlist with name " + args[0]).getBytes()));
         }
 
-        Playlist playlist = playlists.get(index1);
+        Song song = serverData.getSongByName(args[1]);
 
-        boolean k = false;
-        for (Song song : songs) {
-            if (song.getSongName().equals(args[1])) {
-                playlist.addSong(song); // TODO what if it already exists in the playlist
-                k = true;
-            }
+        if (song == null) {
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Song with this name does not exist!".getBytes()));
         }
 
-        return Optional.of(new Message(MessageType.TEXT, k ? "Song was added successfully".getBytes() : "There is not a song with that name!".getBytes()));
+        if (playlist.addSong(song)) {
+            serverData.savePlaylists();
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Song was added successfully".getBytes()));
+        }
+
+        return Optional.of(new Message(MessageType.TEXT,
+                "Playlist already contains this song".getBytes()));
     }
 
     private Optional<Message> handleSearch(String... args) {
         if (args == null || args.length == 0) {
-            return Optional.of(new Message(MessageType.TEXT, "Invalid arguments. Command has the following syntax 'search <words>'".getBytes()));
+            return Optional.of(new Message(MessageType.TEXT,
+                    "Invalid arguments. Command has the following syntax 'search <words>'".getBytes()));
         }
 
         StringBuilder sb = new StringBuilder("Found songs: ");
         List<Song> foundSongs = new ArrayList<>();
         for (String keyword : args) {
-            foundSongs.addAll(songs.stream().filter(x -> x.getSongName().toLowerCase().contains(keyword)).collect(Collectors.toList()));
+            foundSongs.addAll(serverData.getSongs()
+                    .stream()
+                    .filter(x -> x.getSongName().toLowerCase().contains(keyword))
+                    .collect(Collectors.toList()));
         }
 
         for (Song song : foundSongs) {

@@ -14,23 +14,23 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 /**
  * @author angel.beshirov
  */
-@PrepareForTest({Client.class, Socket.class})
-@RunWith(PowerMockRunner.class)
+//@PrepareForTest({Client.class, Socket.class})
+//@RunWith(PowerMockRunner.class)
 public class ClientTest {
 
-    private Client client;
-
-    private Socket socket;
-
-    @Before
-    public void setUp() {
-        Socket mock = mock(Socket.class);
-        client = new Client();
-    }
-
-    @Test
-    public void testClientStart() throws Exception {
-        PowerMockito.whenNew(Socket.class).withAnyArguments().thenReturn(socket);
-        client.start();
-    }
+//    private Client client;
+//
+//    private Socket socket;
+//
+//    @Before
+//    public void setUp() {
+//        Socket mock = mock(Socket.class);
+//        client = new Client();
+//    }
+//
+//    @Test
+//    public void testClientStart() throws Exception {
+//        PowerMockito.whenNew(Socket.class).withAnyArguments().thenReturn(socket);
+//        client.start();
+//    }
 }

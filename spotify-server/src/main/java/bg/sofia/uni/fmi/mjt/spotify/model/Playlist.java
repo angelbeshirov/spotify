@@ -1,8 +1,17 @@
 package bg.sofia.uni.fmi.mjt.spotify.model;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
+/**
+ * Object representation of a playlist created by a user. One playlist can not
+ * contain the same song twice. Two playlists are equal if their names are equal
+ * and they are created by the same user.
+ *
+ * @author angel.beshirov
+ */
 public class Playlist implements Serializable {
     private static final long serialVersionUID = -4681974495940264540L;
 

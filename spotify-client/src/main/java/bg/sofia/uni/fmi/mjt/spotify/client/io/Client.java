@@ -14,11 +14,9 @@ import java.net.Socket;
  * @author angel.beshirov
  */
 public final class Client {
-    public static final int SERVER_PORT = 4444;
-
-    public Client() {
-
-    }
+    private static final int SERVER_PORT = 4444;
+    private static final String SERVER_ERROR = "Error with the server!";
+    private static final String CLIENT_ERROR = "Error with the client!";
 
     public void start() {
         try (Socket socket = new Socket("localhost", SERVER_PORT)) {
@@ -33,12 +31,13 @@ public final class Client {
 
             senderThread.join();
             readerThread.join();
+            System.out.println("waiting");
         } catch (IOException e) {
-            System.out.println("Error with the server!");
-            Logger.logError("Error with the server!", e);
+            System.out.println(SERVER_ERROR);
+            Logger.logError(SERVER_ERROR, e);
         } catch (InterruptedException e) {
-            System.out.println("Error with the client!");
-            Logger.logError("Error with the client!", e);
+            System.out.println(CLIENT_ERROR);
+            Logger.logError(CLIENT_ERROR, e);
         }
     }
 }
